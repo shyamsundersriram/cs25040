@@ -252,8 +252,10 @@ def denoise_median(image, width = 1):
 """
 def sobel_gradients(image):
    ##########################################################################
-   # TODO: YOUR CODE HERE
-   raise NotImplementedError('sobel_gradients')
+   filt_x = np.array([[1, 0, -1], [2, 0, -2], [1, 0, -1]])
+   filt_y = np.array([[1, 2, 1], [0, 0, 0], [-1, -2, -1]])
+   dx = conv_2d(image, filt_x, 'mirror')
+   dy = conv_2d(image, filt_y, 'mirror')
    ##########################################################################
    return dx, dy
 
