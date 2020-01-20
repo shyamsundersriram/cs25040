@@ -151,6 +151,7 @@ def conv_2d(image, filt, mode='zero'):
     for col in range(pad, img_col + pad): 
       crop = image[(row - diff_row):(row + diff_row + 1), (col - diff_col):(col + diff_col + 1)]
       result[row - pad, col - pad] = np.sum(np.multiply(crop, filt))    
+  ##########################################################################
   return result 
 
 """
@@ -184,16 +185,6 @@ def denoise_gaussian(image, sigma = 1.0):
    ##########################################################################
    gauss_1d = gaussian_1d(sigma = 1.0)
    gfilt = np.outer(gauss_1d, gauss_1d)
-
-   #gfilt = np.zeros((7, 7), dtype='float') #dimensions for x and y in the range [-3*sigma, 3*sigma]
-   #for row in range(np.shape(gfilt)[0]): 
-   # for col in range(np.shape(gfilt)[1]): 
-   #   x = abs(3 - row)
-   #   y = abs(3 - col)
-   #   gfilt[row, col] = math.exp( -(float(x)**2 + float(y)**2) / (2 * sigma**2))
-   #print(np.sum(gfilt))
-   #gfilt = gfilt / np.sum(gfilt)
-
    img = conv_2d(image, gfilt, mode='mirror')
    ##########################################################################
    return img
@@ -217,11 +208,20 @@ def denoise_gaussian(image, sigma = 1.0):
       img   - denoised image, a 2D numpy array of the same shape as the input
 """
 def denoise_median(image, width = 1):
+  ##########################################################################
+  img_row, img_col = np.shape(image)
+  result = np.zeros(np.shape(image))
+  # Boundary assumption: only consider cross section of filter and image. Nothing else. 
+  for row in range(img_row): 
+    for col in range(img_col): 
+      lower_r = max(0, row - width) 
+      upper_r= min(img_row, row + width + 1)
+      lower_c = max(0, col - width)
+      upper_c= min(img_col, col + width + 1)
+      crop = image[lower_r:upper_r, lower_c:upper_c]
+      result[row, col] = np.median(crop)
    ##########################################################################
-   # TODO: YOUR CODE HERE
-   raise NotImplementedError('denoise_median')
-   ##########################################################################
-   return img
+  return result 
 
 """
    SOBEL GRADIENT OPERATOR (5 Points)
