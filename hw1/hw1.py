@@ -128,12 +128,14 @@ def conv_2d(image, filt, mode='zero'):
 
   #########################################################################
   result = np.zeros(np.shape(image)) 
-  image = np.flipud(np.fliplr(image)) # O(1) operation for flipping matrix.
+  filt = np.flipud(np.fliplr(filt)) # O(1) operation for flipping matrix.
 
   # padding step 
   img_row, img_col = np.shape(image)
   filt_row, filt_col = np.shape(filt)
-  pad = max(filt_row, filt_col) // 2  # rounds of padding we need to do. 
+  diff_row = filt_row // 2
+  diff_col = filt_col // 2 
+  pad = max(diff_row, diff_col)  # rounds of padding we need to do. 
   for i in range(pad): 
    if mode =='zero': 
      image = pad_border(image)
@@ -142,37 +144,47 @@ def conv_2d(image, filt, mode='zero'):
    else: 
      raise ValueError("mode must be either zero or mirror")
 
+
   # pixel by pixel 
-  for row in range(img_row): 
-    for col in range(img_col): 
-      #crop = image[row:row + filt_row, col:col + filt_col]
-      crop = image[row:row + filt_row, col:col + filt_col]
-
-      #r.h.s gives you sum of hadamard product. #l.h.s is due to inverted indexing. 
-      #result[img_row - row - 1, img_col - col - 1] = np.sum(np.multiply(np.array(crop), np.array(filt))) 
-      result[row, col] = np.sum(np.multiply(np.array(crop), np.array(filt))) 
-
+  for row in range(pad, img_row + pad): 
+    for col in range(pad, img_col + pad): 
+      crop = image[(row - diff_row):(row + diff_row + 1), (col - diff_col):(col + diff_col + 1)]
+      result[row - pad, col - pad] = np.sum(np.multiply(crop, filt))    
   return result 
 
 def test_conv2d(mode='zero'): 
   import scipy.signal
-  image = np.array([[25, 100, 75, 49, 130], 
+
+  image1 = np.array([[5, 10, 3, 2, 9], 
+                    [6, 4, 2, 3, 8], 
+                    [1, 4, 7, 1, 2 ],
+                    [6, 5, 2, 3, 9],
+                    [7, 3, 5, 1, 0], 
+                    [4, 5, 3, 2, 2]])
+
+  filt1 = np.array([[1, 0, 3], [0, 3, 1], [-1, 2, 0]])
+
+  filt2 = np.array([[1, 0, 3]])
+
+  big_image = np.array([[25, 100, 75, 49, 130], 
                     [50, 80, 0, 70, 100], 
                     [5, 10, 10, 30, 0 ],
                     [60, 50, 12, 29, 32],
                     [37, 33, 55, 21, 90], 
                     [140, 17, 0, 23, 222]])
 
-  filt = np.array([[1, 0, 1, 1, 1], 
+  filt3 = np.array([[1, 0, 1], [0, 1, 0], [0, 0, 1]])
+
+  big_filt = np.array([[1, 0, 1, 1, 1], 
                    [0, 1, 0, 1, 1],
                    [0, 0, 1, 1, 1], 
                    [1, 1, 1, 1, 1], 
                    [1, 1, 1, 1, 1]])
 
-  mine = conv_2d(image, filt, mode)
-  actual = scipy.signal.convolve2d(image, filt, mode='same', boundary='symm', fillvalue=0)
-  #return np.array_equal(mine, actual)
-  return mine, actual
+  mine = conv_2d(big_image, filt2, mode)
+  actual = scipy.signal.convolve2d(big_image, filt2, mode='same', boundary='fill', fillvalue=0)
+  return np.array_equal(mine, actual)
+
 
 
 
