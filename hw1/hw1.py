@@ -1,4 +1,5 @@
 import numpy as np
+import math 
 
 """
    Mirror an image about its border.
@@ -181,8 +182,19 @@ def conv_2d(image, filt, mode='zero'):
 """
 def denoise_gaussian(image, sigma = 1.0):
    ##########################################################################
-   # TODO: YOUR CODE HERE
-   raise NotImplementedError('denoise_gaussian')
+   gauss_1d = gaussian_1d(sigma = 1.0)
+   gfilt = np.outer(gauss_1d, gauss_1d)
+
+   #gfilt = np.zeros((7, 7), dtype='float') #dimensions for x and y in the range [-3*sigma, 3*sigma]
+   #for row in range(np.shape(gfilt)[0]): 
+   # for col in range(np.shape(gfilt)[1]): 
+   #   x = abs(3 - row)
+   #   y = abs(3 - col)
+   #   gfilt[row, col] = math.exp( -(float(x)**2 + float(y)**2) / (2 * sigma**2))
+   #print(np.sum(gfilt))
+   #gfilt = gfilt / np.sum(gfilt)
+
+   img = conv_2d(image, gfilt, mode='mirror')
    ##########################################################################
    return img
 
