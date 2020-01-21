@@ -298,24 +298,26 @@ def sobel_gradients(image):
 def nonmax_suppress(mag, theta):
    ##########################################################################
    nonmax = np.zeros(np.shape(mag))
-   for i in img_row: 
-    for j in img_col: 
-      t = theta[row, col]
+   img_row, img_col = np.shape(mag)
+   for i in range(img_row): 
+    for j in range(img_col): 
+      t = theta[i, j]
       pi = math.pi 
 
       # establishing offset vectors 
-      if ((15/8)* pi <= t < 2 * pi) or (0 <= t < (1/8) * pi) or ((7/8) * pi <= t < (9/8) * pi): 
+      if ((15/8)* pi <= t < 2 * pi) or (0 <= t < (1/8) * pi) or ((7/8) * pi <= t < (9/8) * pi): #left right
         j1, j2 = j - 1, j + 1 
         i1, i2 = i, i
-      elif ((1/8) * pi <= t < (3/8) * pi) or ((9/8) * pi <= t < (11/8) * pi): 
-        j1, j2 = j - 1 , j + 1
-        i1, i2 = i + 1, i - 1 
-      elif ((3/8) * pi <= t < (5/8) * pi) or ((11/8) * pi <= t < (13/8) * pi): 
-        j1, j2 = j, j 
-        i1, i2 = i + 1, i - 1 
-      elif ((5/8) * pi <= t < (7/8) * pi) or ((13/8) * pi <= t < (15/8) * pi): 
+      elif ((1/8) * pi <= t < (3/8) * pi) or ((9/8) * pi <= t < (11/8) * pi): # left down, right up 
         j1, j2 = j + 1, j - 1
         i1, i2 = i + 1, i - 1
+      elif ((3/8) * pi <= t < (5/8) * pi) or ((11/8) * pi <= t < (13/8) * pi): #up, down 
+        j1, j2 = j, j 
+        i1, i2 = i + 1, i - 1 
+      elif ((5/8) * pi <= t < (7/8) * pi) or ((13/8) * pi <= t < (15/8) * pi): #left up, right down
+        j1, j2 = j - 1 , j + 1
+        i1, i2 = i + 1, i - 1 
+
       else: 
         raise ValueError('incorrect theta')
 
@@ -330,7 +332,7 @@ def nonmax_suppress(mag, theta):
         j2 = j 
 
       # handling the algorithm 
-      if mag[i, j] > mag[i1, j1] or mag[i, j] > mag[i2, j2]: 
+      if mag[i, j] > mag[i1, j1] and mag[i, j] > mag[i2, j2]: 
         nonmax[i, j] = mag[i, j]
 
    ##########################################################################
@@ -371,7 +373,7 @@ def nonmax_suppress(mag, theta):
 
    Arguments:
      nonmax - a 2D numpy array, containing edge strength (magnitude) which is thined by nonmaximum suppression
-     theta  - a 2D numpy array, containing edeg direction in [0, 2*pi)
+     theta  - a 2D numpy array, containing edge direction in [0, 2*pi)
 
    Returns:
      edge   - a 2D numpy array, containing edges map where the edge pixel is 1 and 0 otherwise.
