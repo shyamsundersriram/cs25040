@@ -297,8 +297,42 @@ def sobel_gradients(image):
 """
 def nonmax_suppress(mag, theta):
    ##########################################################################
-   # TODO: YOUR CODE HERE
-   raise NotImplementedError('nonmax_suppress')
+   nonmax = np.zeros(np.shape(mag))
+   for i in img_row: 
+    for j in img_col: 
+      t = theta[row, col]
+      pi = math.pi 
+
+      # establishing offset vectors 
+      if ((15/8)* pi <= t < 2 * pi) or (0 <= t < (1/8) * pi) or ((7/8) * pi <= t < (9/8) * pi): 
+        j1, j2 = j - 1, j + 1 
+        i1, i2 = i, i
+      elif ((1/8) * pi <= t < (3/8) * pi) or ((9/8) * pi <= t < (11/8) * pi): 
+        j1, j2 = j - 1 , j + 1
+        i1, i2 = i + 1, i - 1 
+      elif ((3/8) * pi <= t < (5/8) * pi) or ((11/8) * pi <= t < (13/8) * pi): 
+        j1, j2 = j, j 
+        i1, i2 = i + 1, i - 1 
+      elif ((5/8) * pi <= t < (7/8) * pi) or ((13/8) * pi <= t < (15/8) * pi): 
+        j1, j2 = j + 1, j - 1
+        i1, i2 = i + 1, i - 1
+      else: 
+        raise ValueError('incorrect theta')
+
+      # handling border cases 
+      if not (0 < i1 < img_row): 
+        i1 = i 
+      if not (0 < i2 < img_row): 
+        i2 = i 
+      if not (0 < j1 < img_col): 
+        j1 = j 
+      if not (0 < j2 < img_col): 
+        j2 = j 
+
+      # handling the algorithm 
+      if mag[i, j] > mag[i1, j1] or mag[i, j] > mag[i2, j2]: 
+        nonmax[i, j] = mag[i, j]
+
    ##########################################################################
    return nonmax
 
