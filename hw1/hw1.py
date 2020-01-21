@@ -309,13 +309,13 @@ def nonmax_suppress(mag, theta):
         j1, j2 = j - 1, j + 1 
         i1, i2 = i, i
       elif ((1/8) * pi <= t < (3/8) * pi) or ((9/8) * pi <= t < (11/8) * pi): # left down, right up 
-        j1, j2 = j + 1, j - 1
+        j1, j2 = j - 1, j + 1
         i1, i2 = i + 1, i - 1
       elif ((3/8) * pi <= t < (5/8) * pi) or ((11/8) * pi <= t < (13/8) * pi): #up, down 
         j1, j2 = j, j 
         i1, i2 = i + 1, i - 1 
       elif ((5/8) * pi <= t < (7/8) * pi) or ((13/8) * pi <= t < (15/8) * pi): #left up, right down
-        j1, j2 = j - 1 , j + 1
+        j1, j2 = j + 1 , j - 1
         i1, i2 = i + 1, i - 1 
 
       else: 
@@ -354,7 +354,7 @@ def nonmax_suppress(mag, theta):
    Since the thresholds are highly dependent on the statistics of the edge
    magnitude distribution, we recommend to consider features like maximum edge
    magnitude or the edge magnitude histogram in order to compute the high
-   threshold.  Heuristically, once the high threshod is fixed, you may set the
+   threshold.  Heuristically, once the high threshold is fixed, you may set the
    low threshold to be propotional to the high threshold.
 
    Note that the thresholds critically determine the quality of the final edges.
