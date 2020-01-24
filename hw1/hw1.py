@@ -263,7 +263,7 @@ def sobel_gradients(image):
 """
 THETA FUNC: 
 
-Helper function to offset a pixel based on a direction given by a theta value. 
+Helper function to offset a pixel perpendicular to the a direction given by a theta value. 
 Used in nonmax_suppres and hysteresis_edge_linking. 
 
 Input: 
@@ -274,7 +274,6 @@ Input:
   - t: theta[i, j] value 
 
 """
-
 def theta_func(i, j, t, img_row, img_col): 
   pi = math.pi 
   # establishing offset vectors 
@@ -290,7 +289,6 @@ def theta_func(i, j, t, img_row, img_col):
   elif ((5/8) * pi <= t < (7/8) * pi) or ((13/8) * pi <= t < (15/8) * pi): #left up, right down
     j1, j2 = j + 1 , j - 1
     i1, i2 = i + 1, i - 1 
-
   else: 
     raise ValueError('invalid theta')
   # handling border cases 
@@ -472,12 +470,13 @@ def hysteresis_edge_linking(nonmax, theta, med):
 """
 def canny(image):
    ##########################################################################
-   image = denoise_gaussian(image) #improves image result 
+   #image = denoise_gaussian(image) #improves image result 
+   image = denoise_bilateral(image)
    med = np.median(image)
    df_x, df_y = sobel_gradients(image)
    mag = np.sqrt((df_x ** 2 + df_y ** 2))
    theta = np.arctan2(df_x, df_y) 
-   theta = np.where(theta < 0, theta + 2 * math.pi, theta)
+   theta = np.where(theta < 0, theta + math.pi, theta)
    nonmax = nonmax_suppress(mag, theta)
    edge = hysteresis_edge_linking(nonmax, theta, med)
     ##########################################################################
@@ -518,10 +517,28 @@ def canny(image):
         img   - denoised image, a 2D numpy array of the same shape as the input
 """
 
-def denoise_bilateral(image, sigma_s=1, sigma_r=25.5):
+def denoise_bilateral(image, sigma_s=1, sigma_r=25.5, reg=3 * 10**-8):
     assert image.ndim == 2, 'image should be grayscale'
     ##########################################################################
-    fo
-    raise NotImplementedError('denoise_bilateral')
-    ##########################################################################
-    return img
+    gaus = lambda r, sigma: (np.exp( -0.5*r/sigma**2)*3).astype(int)*1.0/3.0
+    window = int(3 * sigma_s + 1) # want window to be 3 times std. deviation of mean 
+    weighted_sum = np.ones(np.shape(image)) * reg 
+    res = image * reg 
+    for x in range(-window, window + 1): 
+      for y in range(-window, window + 1): 
+        #spatial gaussian weight 
+        sp_w = gaus(x**2 + y**2, sigma_s)
+
+        #offset switch 
+        o = np.roll(image, [y, x], axis=[0, 1])
+
+        #value weight from squared distance 
+        tw = sp_w*gaus((o - image)**2, sigma_r)
+
+        #accumulate 
+        res += o*tw 
+        weighted_sum += tw 
+
+    #normalize
+    return res / weighted_sum 
+
