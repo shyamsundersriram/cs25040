@@ -260,6 +260,51 @@ def sobel_gradients(image):
    return dx, dy
 
 """
+THETA FUNC: 
+
+Helper function to offset a pixel based on a direction given by a theta value. 
+Used in nonmax_suppres and hysteresis_edge_linking. 
+
+Input: 
+  - i row of pixel in question (int)
+  - j column of pixel in question 
+  - Img_row rows in matrix (int) 
+  - Img_col colums in matrix (int)
+  - t: theta[i, j] value 
+
+"""
+
+def theta_func(i, j, t, img_row, img_col): 
+  pi = math.pi 
+  # establishing offset vectors 
+  if ((15/8)* pi <= t < 2 * pi) or (0 <= t < (1/8) * pi) or ((7/8) * pi <= t < (9/8) * pi): #left right
+    j1, j2 = j - 1, j + 1 
+    i1, i2 = i, i
+  elif ((1/8) * pi <= t < (3/8) * pi) or ((9/8) * pi <= t < (11/8) * pi): # left down, right up 
+    j1, j2 = j - 1, j + 1
+    i1, i2 = i + 1, i - 1
+  elif ((3/8) * pi <= t < (5/8) * pi) or ((11/8) * pi <= t < (13/8) * pi): #up, down 
+    j1, j2 = j, j 
+    i1, i2 = i + 1, i - 1 
+  elif ((5/8) * pi <= t < (7/8) * pi) or ((13/8) * pi <= t < (15/8) * pi): #left up, right down
+    j1, j2 = j + 1 , j - 1
+    i1, i2 = i + 1, i - 1 
+  else: 
+    raise ValueError('invalid theta')
+  # handling border cases 
+  if not (0 < i1 < img_row): 
+    i1 = i 
+  if not (0 < i2 < img_row): 
+    i2 = i 
+  if not (0 < j1 < img_col): 
+    j1 = j 
+  if not (0 < j2 < img_col): 
+    j2 = j
+  return i1, j1, i2, j2
+
+
+
+"""
    NONMAXIMUM SUPPRESSION (10 Points)
 
    Nonmaximum suppression.
@@ -295,6 +340,7 @@ def sobel_gradients(image):
                pixels that are not a local maximum of strength along an
                edge have been suppressed (assigned a strength of zero)
 """
+
 def nonmax_suppress(mag, theta):
    ##########################################################################
    nonmax = np.zeros(np.shape(mag))
@@ -303,34 +349,8 @@ def nonmax_suppress(mag, theta):
     for j in range(img_col): 
       t = theta[i, j]
       pi = math.pi 
-
-      # establishing offset vectors 
-      if ((15/8)* pi <= t < 2 * pi) or (0 <= t < (1/8) * pi) or ((7/8) * pi <= t < (9/8) * pi): #left right
-        j1, j2 = j - 1, j + 1 
-        i1, i2 = i, i
-      elif ((1/8) * pi <= t < (3/8) * pi) or ((9/8) * pi <= t < (11/8) * pi): # left down, right up 
-        j1, j2 = j - 1, j + 1
-        i1, i2 = i + 1, i - 1
-      elif ((3/8) * pi <= t < (5/8) * pi) or ((11/8) * pi <= t < (13/8) * pi): #up, down 
-        j1, j2 = j, j 
-        i1, i2 = i + 1, i - 1 
-      elif ((5/8) * pi <= t < (7/8) * pi) or ((13/8) * pi <= t < (15/8) * pi): #left up, right down
-        j1, j2 = j + 1 , j - 1
-        i1, i2 = i + 1, i - 1 
-
-      else: 
-        raise ValueError('invalid theta')
-
-      # handling border cases 
-      if not (0 < i1 < img_row): 
-        i1 = i 
-      if not (0 < i2 < img_row): 
-        i2 = i 
-      if not (0 < j1 < img_col): 
-        j1 = j 
-      if not (0 < j2 < img_col): 
-        j2 = j 
-
+      #offset vectors 
+      i1, j1, i2, j2 = theta_func(img_row, img_col, theta, i, j)
       # handling the algorithm 
       if mag[i, j] > mag[i1, j1] and mag[i, j] > mag[i2, j2]: 
         nonmax[i, j] = mag[i, j]
@@ -358,7 +378,7 @@ def nonmax_suppress(mag, theta):
    low threshold to be propotional to the high threshold.
 
    Note that the thresholds critically determine the quality of the final edges.
-   You need to carefully tuned your threshold strategy to get decent
+   You need to carefully tune your threshold strategy to get decent
    performance on real images.
 
    For the edge linking, the weak edges caused by true edges will connect up
@@ -381,9 +401,31 @@ def nonmax_suppress(mag, theta):
 
 def hysteresis_edge_linking(nonmax, theta):
    ##########################################################################
-   # TODO: YOUR CODE HERE
-   raise NotImplementedError('hysteresis_edge_linking')
-   ##########################################################################
+   max_mag = np.max(nonmax)
+   strong = 0.1 * max_mag 
+   weak = 0.025 * mag_mag 
+   hyst = np.where(nonmax >= strong, 1, nonmax)
+   hyst = np.where(hyst < weak, 0, hyst)
+   hyst = np.where(weak <= hyst < strong, 0.5, hyst)
+   img_row, img_col = np.shape(nonmax) 
+
+   #thresholding 
+   for i in range(img_row): 
+    for j in range(img_col): 
+      if hyst[i, j] == 0.5: 
+        i1, j1, i2, j2 = theta_func(img_row, img_col, theta, i, j)
+        if hyst[i1, j1] != 1 and hyst[i2, j2] != 1: 
+          hyst[i, j] = 0 
+
+   #edge-linking 
+   edge = np.zeros((img_row, img_col))
+   pad = 1 # (adding one layer of zeros around border)
+   hyst = pad_border(hyst)
+   for row in range(pad, img_row + pad): 
+    for col in range(pad, img_col + pad): 
+      crop = hyst[(row - diff_row):(row + diff_row + 1), (col - diff_col):(col + diff_col + 1)] 
+      if crop.max() == 1: 
+        edge[row, col] = 1
    return edge
 
 """
