@@ -319,7 +319,7 @@ def nonmax_suppress(mag, theta):
         i1, i2 = i + 1, i - 1 
 
       else: 
-        raise ValueError('incorrect theta')
+        raise ValueError('invalid theta')
 
       # handling border cases 
       if not (0 < i1 < img_row): 
