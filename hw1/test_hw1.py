@@ -1,5 +1,5 @@
 import numpy as np 
-from hw1 import conv_2d, denoise_gaussian, sobel_gradients, nonmax_suppress, canny 
+from hw1 import conv_2d, denoise_gaussian, sobel_gradients, nonmax_suppress, canny, denoise_bilateral
 import scipy.signal
 import math 
 from scipy import ndimage
@@ -64,16 +64,30 @@ def test_nonmax_suppress(image):
     print(theta / math.pi * 8)
     print(result) 
 
-def test_canny(): 
-    #image_str = "data/edge_img/hard/001.jpg"
-    #image_str = "data/edge_img/checker.png"
-    #image_str = "data/edge_img/easy/001.jpg"
-    #image_str = "data/ck1.jpg"
+
+def test_denoise_bilateral(): 
     image_str = "data/raghav_low_res.jpg"
+    image = ndimage.imread(image_str, flatten=True)  
+    res = denoise_bilateral(image, sigma_s=1, sigma_r=25.5, reg=3 * 10**-8)  
+    plt.imshow(res) 
+    plt.show()
+
+
+
+def test_canny(): 
+    #image_str = "data/edge_img/very_hard/001.jpg"
+    #image_str = "data/edge_img/checker.png"
+    image_str = "data/edge_img/easy/003.jpg"
+    #image_str = "data/ck1.jpg"
+    #image_str = "data/raghav_low_res.jpg"
     image = ndimage.imread(image_str, flatten=True)
     mag, nonmax, edge = canny(image)
-    plt.imshow(edge)
+    plt.imshow(mag)
     plt.show() 
+    plt.imshow(nonmax)
+    plt.show() 
+    plt.imshow(edge)
+    plt.show()
     
 
 
