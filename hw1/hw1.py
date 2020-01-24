@@ -400,11 +400,11 @@ def nonmax_suppress(mag, theta):
      edge   - a 2D numpy array, containing edges map where the edge pixel is 1 and 0 otherwise.
 """
 
-def hysteresis_edge_linking(nonmax, theta):
+def hysteresis_edge_linking(nonmax, theta, med):
    ##########################################################################
-   max_mag = np.max(nonmax)
-   strong = 0.1 * max_mag 
-   weak = 0.025 * max_mag 
+   sigma = 0.25
+   weak = int(max(0, (1.0 - sigma) *  med))
+   strong = int(max(0, (1.0 + sigma)* med))
    hyst = np.where(nonmax < weak, 0, nonmax)
    hyst = np.where(hyst >= strong, 1, hyst)
    hyst[(weak <= hyst) & (hyst < strong)] = 0.5 
@@ -429,6 +429,7 @@ def hysteresis_edge_linking(nonmax, theta):
       if crop.max() == 1: 
         edge[row - pad, col - pad] = 1
    return edge
+
 
 """
    CANNY EDGE DETECTOR (5 Points)
@@ -465,12 +466,13 @@ def hysteresis_edge_linking(nonmax, theta):
 def canny(image):
    ##########################################################################
    image = denoise_gaussian(image)
+   med = np.median(image)
    df_x, df_y = sobel_gradients(image)
    mag = np.sqrt((df_x ** 2 + df_y ** 2))
    theta = np.arctan2(df_x, df_y) 
    theta = np.where(theta < 0, theta + 2 * math.pi, theta)
    nonmax = nonmax_suppress(mag, theta)
-   edge = hysteresis_edge_linking(nonmax, theta)
+   edge = hysteresis_edge_linking(nonmax, theta, med)
     ##########################################################################
    return mag, nonmax, edge
 
