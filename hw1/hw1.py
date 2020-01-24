@@ -462,9 +462,13 @@ def hysteresis_edge_linking(nonmax, theta):
 """
 def canny(image):
    ##########################################################################
-   # TODO: YOUR CODE HERE
-   raise NotImplementedError('canny')
-   ##########################################################################
+   df_x, df_y = sobel_gradients(image)
+   mag = np.sqrt((df_x ** 2 + df_y ** 2))
+   theta = np.arctan2(df_x, df_y) 
+   theta = np.where(theta < 0, theta + 2 * math.pi, theta)
+   nonmax = nonmax_suppress(mag, theta)
+   edge = hysteresis_edge_linking(nonmax, theta)
+    ##########################################################################
    return mag, nonmax, edge
 
 
