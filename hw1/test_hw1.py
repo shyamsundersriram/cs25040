@@ -1,8 +1,9 @@
 import numpy as np 
-from hw1 import conv_2d, denoise_gaussian, sobel_gradients, nonmax_suppress
+from hw1 import conv_2d, denoise_gaussian, sobel_gradients, nonmax_suppress, canny 
 import scipy.signal
 import math 
 from scipy import ndimage
+import matplotlib.pyplot as plt 
 
 image1 = np.array([[5, 10, 3, 2, 9], 
                   [6, 4, 2, 3, 8], 
@@ -27,48 +28,58 @@ big_filt = np.array([[1, 0, 1, 1, 1],
 image3 = np.array([[16. ,  8. ,  0.5],
                     [ 8.5,  0.5,  0. ],
                     [ 1. ,  1. ,  0.5]])
-image4 = np.array([[2 ,  0 ,  0],
-                    [ 0,  3,  0 ],
-                    [ 0 ,  0 ,  1]])
+image4 = np.identity(10) * 10
 
 def test_conv2d(mode='mirror'): 
   if mode == 'mirror': 
-  	bdry = 'symm'
+    bdry = 'symm'
   elif mode =='zero': 
-  	bdry = 'fill'
+    bdry = 'fill'
   else: 
-  	raise ValueError("mode must be either zero or mirror")
+    raise ValueError("mode must be either zero or mirror")
 
   mine = conv_2d(big_image, filt2, mode)
   actual = scipy.signal.convolve2d(big_image, filt2, mode='same', boundary=bdry, fillvalue=0)
   return np.array_equal(mine, actual)
 
 def test_denoise_gaussian():
-	sigma1 = 1.0 
-	result = denoise_gaussian(image1, sigma1)
-	actual = ndimage.gaussian_filter(image1, sigma1)
-	return result, actual
+    sigma1 = 1.0 
+    result = denoise_gaussian(image1, sigma1)
+    actual = ndimage.gaussian_filter(image1, sigma1)
+    return result, actual
 
 def test_denoise_median():
-	width1 = 1.0 
-	result = denoise_gaussian(image1, width1)
-	actual = ndimage.gaussian_filter(image1, sigma1)
-	return result, actual
+    width1 = 1.0 
+    result = denoise_gaussian(image1, width1)
+    actual = ndimage.gaussian_filter(image1, sigma1)
+    return result, actual
 
 def test_nonmax_suppress(image): 
-	df_x, df_y = sobel_gradients(image)
-	mag = np.sqrt((df_x ** 2 + df_y ** 2))
-	theta = np.arctan2(df_x, df_y) 
-	theta = np.where(theta < 0, theta + 2 * math.pi, theta)
-	result = nonmax_suppress(mag, theta)
-	print(mag)
-	print(theta / math.pi * 8)
-	print(result) 
+    df_x, df_y = sobel_gradients(image)
+    mag = np.sqrt((df_x ** 2 + df_y ** 2))
+    theta = np.arctan2(df_x, df_y) 
+    theta = np.where(theta < 0, theta + 2 * math.pi, theta)
+    result = nonmax_suppress(mag, theta)
+    print(mag)
+    print(theta / math.pi * 8)
+    print(result) 
+
+def test_canny(): 
+    #image_str = "data/edge_img/hard/001.jpg"
+    #image_str = "data/edge_img/checker.png"
+    #image_str = "data/edge_img/easy/001.jpg"
+    #image_str = "data/ck1.jpg"
+    image_str = "data/raghav_low_res.jpg"
+    image = ndimage.imread(image_str, flatten=True)
+    mag, nonmax, edge = canny(image)
+    plt.imshow(edge)
+    plt.show() 
+    
 
 
 
-if __name__ == "__main__": 
-	test_nonmax_suppress(image4)
+
+
 
 
     
