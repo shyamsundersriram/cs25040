@@ -1,5 +1,6 @@
 import numpy as np
 import math 
+from scipy import ndimage
 
 """
    Mirror an image about its border.
@@ -277,16 +278,16 @@ Input:
 def theta_func(i, j, t, img_row, img_col): 
   pi = math.pi 
   # establishing offset vectors 
-  if ((15/8)* pi <= t < 2 * pi) or (0 <= t < (1/8) * pi) or ((7/8) * pi <= t < (9/8) * pi): #left right
+  if ((15/8)* pi <= t < 2 * pi) or (0 <= t and t < (1/8) * pi) or ((7/8) * pi <= t and t < (9/8) * pi): #left right
     j1, j2 = j - 1, j + 1 
-    i1, i2 = i, i
-  elif ((1/8) * pi <= t < (3/8) * pi) or ((9/8) * pi <= t < (11/8) * pi): # left down, right up 
+    i1, i2 = i, i    
+  elif ((1/8) * pi <= t < (3/8) * pi) | ((9/8) * pi <= t < (11/8) * pi): # left down, right up 
     j1, j2 = j - 1, j + 1
     i1, i2 = i + 1, i - 1
-  elif ((3/8) * pi <= t < (5/8) * pi) or ((11/8) * pi <= t < (13/8) * pi): #up, down 
+  elif ((3/8) * pi <= t < (5/8) * pi) | ((11/8) * pi <= t < (13/8) * pi): #up, down 
     j1, j2 = j, j 
     i1, i2 = i + 1, i - 1 
-  elif ((5/8) * pi <= t < (7/8) * pi) or ((13/8) * pi <= t < (15/8) * pi): #left up, right down
+  elif ((5/8) * pi <= t < (7/8) * pi) | ((13/8) * pi <= t < (15/8) * pi): #left up, right down
     j1, j2 = j + 1 , j - 1
     i1, i2 = i + 1, i - 1 
   else: 
@@ -350,7 +351,7 @@ def nonmax_suppress(mag, theta):
       t = theta[i, j]
       pi = math.pi 
       #offset vectors 
-      i1, j1, i2, j2 = theta_func(img_row, img_col, theta, i, j)
+      i1, j1, i2, j2 = theta_func(i, j, t, img_row, img_col)
       # handling the algorithm 
       if mag[i, j] > mag[i1, j1] and mag[i, j] > mag[i2, j2]: 
         nonmax[i, j] = mag[i, j]
@@ -403,17 +404,18 @@ def hysteresis_edge_linking(nonmax, theta):
    ##########################################################################
    max_mag = np.max(nonmax)
    strong = 0.1 * max_mag 
-   weak = 0.025 * mag_mag 
-   hyst = np.where(nonmax >= strong, 1, nonmax)
-   hyst = np.where(hyst < weak, 0, hyst)
-   hyst = np.where(weak <= hyst < strong, 0.5, hyst)
+   weak = 0.025 * max_mag 
+   hyst = np.where(nonmax < weak, 0, nonmax)
+   hyst = np.where(hyst >= strong, 1, hyst)
+   hyst[(weak <= hyst) & (hyst < strong)] = 0.5 
    img_row, img_col = np.shape(nonmax) 
 
    #thresholding 
    for i in range(img_row): 
     for j in range(img_col): 
+      t = theta[i, j]
       if hyst[i, j] == 0.5: 
-        i1, j1, i2, j2 = theta_func(img_row, img_col, theta, i, j)
+        i1, j1, i2, j2 = theta_func(i, j, t, img_row, img_col)
         if hyst[i1, j1] != 1 and hyst[i2, j2] != 1: 
           hyst[i, j] = 0 
 
@@ -423,9 +425,9 @@ def hysteresis_edge_linking(nonmax, theta):
    hyst = pad_border(hyst)
    for row in range(pad, img_row + pad): 
     for col in range(pad, img_col + pad): 
-      crop = hyst[(row - diff_row):(row + diff_row + 1), (col - diff_col):(col + diff_col + 1)] 
+      crop = hyst[(row - pad):(row + pad + 1), (col - pad):(col + pad + 1)] 
       if crop.max() == 1: 
-        edge[row, col] = 1
+        edge[row - pad, col - pad] = 1
    return edge
 
 """
@@ -462,6 +464,7 @@ def hysteresis_edge_linking(nonmax, theta):
 """
 def canny(image):
    ##########################################################################
+   image = denoise_gaussian(image)
    df_x, df_y = sobel_gradients(image)
    mag = np.sqrt((df_x ** 2 + df_y ** 2))
    theta = np.arctan2(df_x, df_y) 
@@ -472,7 +475,7 @@ def canny(image):
    return mag, nonmax, edge
 
 
-# Extra Credits:
+# Extra Credits:a
 # (a) Improve Edge detection image quality (5 Points)
 # (b) Bilateral filtering (5 Points)
 # You can do either one and the maximum extra credits you can get is 5.
