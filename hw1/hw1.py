@@ -483,7 +483,7 @@ def canny(image):
    return mag, nonmax, edge
 
 
-# Extra Credits:a
+# Extra Credits:
 # (a) Improve Edge detection image quality (5 Points) 
 # (b) Bilateral filtering (5 Points)
 # You can do either one and the maximum extra credits you can get is 5.
