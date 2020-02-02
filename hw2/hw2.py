@@ -1,6 +1,7 @@
 import numpy as np
 from canny import *
 import operator
+import math 
 
 """
    INTEREST POINT OPERATOR (12 Points Implementation + 3 Points Write-up)
@@ -85,9 +86,9 @@ def find_interest_points(image, max_points = 200, scale = 1.0):
    ##########################################################################
    # calculating Rs 
    Ix, Iy = sobel_gradients(image)
-   Sx2 = conv_2d_gaussian(np.multiply(Ix, Ix))
-   Sy2 = conv_2d_gaussian(np.multiply(Iy, Iy))
-   Sxy = conv_2d_gaussian(np.multiply(Ix, Iy)) 
+   Sx2 = conv_2d_gaussian(np.multiply(Ix, Ix), scale)
+   Sy2 = conv_2d_gaussian(np.multiply(Iy, Iy), scale)
+   Sxy = conv_2d_gaussian(np.multiply(Ix, Iy), scale) 
    det = np.multiply(Sx2, Sy2) - np.multiply(Sxy, Sxy)
    alpha = 0.05
    trace = Sx2 + Sy2 
@@ -159,10 +160,40 @@ def extract_features(image, xs, ys, scale = 1.0):
    # check that image is grayscale
    assert image.ndim == 2, 'image should be grayscale'
    ##########################################################################
-   # TODO: YOUR CODE HERE
-   raise NotImplementedError('extract_features')
+   
+   #pre-processing 
+   feats = []
+   pad = (3 * scale) // 2 
+   new_image = pad_border(image, pad, pad)
+   xs = xs + pad 
+   ys = ys + pad
+   Ix, Iy = sobel_gradients(image)
+   theta = np.arctan2(Iy, Ix)
+
+   # finding features 
+   for x in xs: 
+    for y in ys: 
+      window = image[x - scale: x + scale, y - scale: y + scale] #only works for scale = 1.0
+      vec = window_vector(window, theta)
+      feats.append(vec)
+   feats = np.array(feats)
    ##########################################################################
    return feats
+
+def window_vector(window, theta): 
+  vec_list = []
+  X, Y = np.shape(window)
+  for x in range(X - scale, Y + scale): 
+    for y in range(X - scale, Y + scale): 
+      if (x, y) == (X, Y): 
+        continue 
+      theta_vec = [0] * 8 
+      pi = math.pi 
+      ix = theta / (-pi/4) + 4 
+      theta_vec[ix] = 1 
+      vec_list.append(theta_vec[ix])
+  vec = np.ravel(np.array(vec_list))
+  return vec
 
 """
    FEATURE MATCHING (7 Points Implementation + 3 Points Write-up)
