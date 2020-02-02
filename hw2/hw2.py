@@ -1,5 +1,6 @@
 import numpy as np
 from canny import *
+import operator
 
 """
    INTEREST POINT OPERATOR (12 Points Implementation + 3 Points Write-up)
@@ -91,17 +92,16 @@ def find_interest_points(image, max_points = 200, scale = 1.0):
    trace = Sx2 + Sy2 
    alpha_trace = alpha * np.multiply(trace, trace)
    R = det - alpha_trace 
-   max_R = np.max(R)
    theta = np.arctan2(Iy, Ix)
-   nonmaxR = nonmax_suppress(R, theta)
-   #R = np.where(nonmaxR > max_R * 0.1, 1, 0)
-   return nonmaxR
+   R = nonmax_suppress(R, theta)
+   X, Y = np.shape(R)
+   sortedR = []
+   for i in range(X):
+    for j in range(Y):
+      sortedR.append((R[i, j], i, j))
+   sortedR.sort(key = operator.itemgetter(0), reverse = True)
+   return sortedR[:max_points]
 
-
-
-   #for i in range(X): 
-   # for j in range(Y): 
-   #   det = Sx2[i, j] * Sy2[i, j] - Sxy[i, j] * Sxy[i, j]
 
    ##########################################################################
    #return xs, ys, scores
