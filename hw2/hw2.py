@@ -83,6 +83,7 @@ def find_interest_points(image, max_points = 200, scale = 1.0):
    # check that image is grayscale
    assert image.ndim == 2, 'image should be grayscale'
    ##########################################################################
+   # calculating Rs 
    Ix, Iy = sobel_gradients(image)
    Sx2 = conv_2d_gaussian(np.multiply(Ix, Ix))
    Sy2 = conv_2d_gaussian(np.multiply(Iy, Iy))
@@ -94,17 +95,20 @@ def find_interest_points(image, max_points = 200, scale = 1.0):
    R = det - alpha_trace 
    theta = np.arctan2(Iy, Ix)
    R = nonmax_suppress(R, theta)
-   X, Y = np.shape(R)
+
+   # finding max Rs 
+   X, Y = np.shape(R)   
    sortedR = []
    for i in range(X):
     for j in range(Y):
       sortedR.append((R[i, j], i, j))
    sortedR.sort(key = operator.itemgetter(0), reverse = True)
-   return sortedR[:max_points]
-
-
+   sortedR = sortedR[:max_points]
+   scores = np.array([tup[0] for tup in sortedR])
+   xs = np.array([tup[1] for tup in sortedR])
+   ys = np.array([tup[2] for tup in sortedR])
    ##########################################################################
-   #return xs, ys, scores
+   return xs, ys, scores
 
 """
    FEATURE DESCRIPTOR (12 Points Implementation + 3 Points Write-up)
