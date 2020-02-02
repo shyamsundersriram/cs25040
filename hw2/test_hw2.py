@@ -12,5 +12,9 @@ def test_interest(max_points=200, scale=1.0):
 	#plt.show()
 	return R
 
+def test_feats(max_points=200, scale=1.0): 
+	xs, ys, scores = find_interest_points(image, max_points, scale)
+	feats = extract_features(image, xs, ys, scale)
+	return feats 
 
 

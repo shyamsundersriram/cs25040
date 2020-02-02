@@ -163,35 +163,37 @@ def extract_features(image, xs, ys, scale = 1.0):
    
    #pre-processing 
    feats = []
-   pad = (3 * scale) // 2 
+   pad = int((3 * scale) // 2)
    new_image = pad_border(image, pad, pad)
    xs = xs + pad 
    ys = ys + pad
    Ix, Iy = sobel_gradients(image)
-   theta = np.arctan2(Iy, Ix)
+   theta = pad_border(np.arctan2(Ix, Iy), pad, pad)
+   n = len(xs)
 
    # finding features 
-   for x in xs: 
-    for y in ys: 
-      window = image[x - scale: x + scale, y - scale: y + scale] #only works for scale = 1.0
-      vec = window_vector(window, theta)
-      feats.append(vec)
-   feats = np.array(feats)
+   for i in range(n): 
+    x = xs[i] + pad 
+    y = ys[i] + pad 
+    img_window = new_image[x - pad: x + pad + 1, y - pad: y + pad + 1] #only works for scale = 1.0
+    theta_window = theta[x - pad: x + pad + 1, y - pad: y + pad + 1]
+    feature_vec = window_vector(img_window, theta_window)
+    feats.append(feature_vec)
+   feats = np.stack(feats)
    ##########################################################################
    return feats
 
 def window_vector(window, theta): 
   vec_list = []
   X, Y = np.shape(window)
-  for x in range(X - scale, Y + scale): 
-    for y in range(X - scale, Y + scale): 
-      if (x, y) == (X, Y): 
-        continue 
-      theta_vec = [0] * 8 
+  for x in range(X): 
+    for y in range(Y):
+      theta_ix = theta[x, y]
+      theta_vec = np.array([0] * 8) 
       pi = math.pi 
-      ix = theta / (-pi/4) + 4 
+      ix = int(np.floor(theta_ix / (-pi/4) + 4))
       theta_vec[ix] = 1 
-      vec_list.append(theta_vec[ix])
+      vec_list.append(theta_vec)
   vec = np.ravel(np.array(vec_list))
   return vec
 
