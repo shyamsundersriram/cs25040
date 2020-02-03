@@ -95,7 +95,7 @@ def find_interest_points(image, max_points = 200, scale = 1.0):
    alpha_trace = alpha * np.multiply(trace, trace)
    R = det - alpha_trace 
    theta = np.arctan2(Iy, Ix)
-   R = nonmax_suppress(R, theta)
+   R = nonmax_suppress(R, theta) #same dimensions as image 
 
    # finding max Rs 
    X, Y = np.shape(R)   
@@ -163,9 +163,8 @@ def extract_features(image, xs, ys, scale = 1.0): #need to fix
    
    #pre-processing 
    # want width = 3 
-   feats = []
    width = 3 
-   pad = int((3 * width * scale) // 2) # want 3 x 3 grid 
+   pad = int((3 * width * scale) // 2) # want 3 x 3 grid of width 3. So 9 x 9 grid. 
    new_image = pad_border(image, pad, pad)
    xs = xs + pad 
    ys = ys + pad
@@ -174,6 +173,7 @@ def extract_features(image, xs, ys, scale = 1.0): #need to fix
    n = len(xs)
 
    # finding features in a window 
+   feats = []
    for i in range(n): 
     x = xs[i] + pad 
     y = ys[i] + pad 
@@ -192,9 +192,9 @@ def extract_features(image, xs, ys, scale = 1.0): #need to fix
     feature_vec = np.ravel(np.array(vec_list))
     feats.append(feature_vec)
 
-   feats = np.stack(feats)
+   feats = np.array(feats)
    ##########################################################################
-   return feats
+   return feats, xs, ys
 
 def box_calc(theta, x_val, y_val, width): 
   vec_list = []
@@ -204,7 +204,7 @@ def box_calc(theta, x_val, y_val, width):
       theta_vec = np.array([0] * 8) 
       pi = math.pi 
       ix = int(np.floor(theta_ix / (-pi/4) + 4))
-      theta_vec[ix] = 1       
+      theta_vec[ix] += 1       
   return theta_vec 
 
 """

@@ -12,15 +12,16 @@ def test_interest(max_points=200, scale=1.0):
 	#plt.show()
 	return R
 
-def test_feats(max_points=200, scale=1.0): 
+def test_feats(max_points=200, scale=1.0): #fails at 98 
 	xs, ys, scores = find_interest_points(image, max_points, scale)
 	feats = extract_features(image, xs, ys, scale)
 	works= True 
-	for i in range(max_points): 
-		if len(feats[i]) == 72:
-			print(feats[i]) 
-			print('this is i')
-			print(i)
-	#return feats 
+	#for i in range(max_points): 
+	#	if len(feats[i]) == 72:
+	#		print(feats[i]) 
+	#		print('this is i')
+	#		print(i)
+	print(np.shape(image))
+	return feats 
 
 
