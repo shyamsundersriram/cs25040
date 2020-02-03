@@ -15,6 +15,12 @@ def test_interest(max_points=200, scale=1.0):
 def test_feats(max_points=200, scale=1.0): 
 	xs, ys, scores = find_interest_points(image, max_points, scale)
 	feats = extract_features(image, xs, ys, scale)
-	return feats 
+	works= True 
+	for i in range(max_points): 
+		if len(feats[i]) == 72:
+			print(feats[i]) 
+			print('this is i')
+			print(i)
+	#return feats 
 
 

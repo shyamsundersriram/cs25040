@@ -156,14 +156,16 @@ def find_interest_points(image, max_points = 200, scale = 1.0):
                  feature descriptors at each of the N input locations
                  (using the default scheme suggested above, K = 72)
 """
-def extract_features(image, xs, ys, scale = 1.0):
+def extract_features(image, xs, ys, scale = 1.0): #need to fix 
    # check that image is grayscale
    assert image.ndim == 2, 'image should be grayscale'
    ##########################################################################
    
    #pre-processing 
+   # want width = 3 
    feats = []
-   pad = int((3 * scale) // 2)
+   width = 3 
+   pad = int((3 * width * scale) // 2) # want 3 x 3 grid 
    new_image = pad_border(image, pad, pad)
    xs = xs + pad 
    ys = ys + pad
@@ -171,31 +173,39 @@ def extract_features(image, xs, ys, scale = 1.0):
    theta = pad_border(np.arctan2(Ix, Iy), pad, pad)
    n = len(xs)
 
-   # finding features 
+   # finding features in a window 
    for i in range(n): 
     x = xs[i] + pad 
     y = ys[i] + pad 
-    img_window = new_image[x - pad: x + pad + 1, y - pad: y + pad + 1] #only works for scale = 1.0
+    img_window = new_image[x - pad: x + pad + 1, y - pad: y + pad + 1] 
     theta_window = theta[x - pad: x + pad + 1, y - pad: y + pad + 1]
-    feature_vec = window_vector(img_window, theta_window)
+    X, Y = np.shape(img_window)
+    box_x = np.arange(width, X + 1, width)
+    box_y = np.arange(width, Y + 1, width)
+    vec_list = []
+
+    # doing box calculations 
+    for x_val in box_x: 
+      for y_val in box_y:
+        vec = box_calc(theta_window, x_val, y_val, width)
+        vec_list.append(vec)
+    feature_vec = np.ravel(np.array(vec_list))
     feats.append(feature_vec)
+
    feats = np.stack(feats)
    ##########################################################################
    return feats
 
-def window_vector(window, theta): 
+def box_calc(theta, x_val, y_val, width): 
   vec_list = []
-  X, Y = np.shape(window)
-  for x in range(X): 
-    for y in range(Y):
+  for x in range(x_val - width, x_val): 
+    for y in range(y_val - width, y_val): 
       theta_ix = theta[x, y]
       theta_vec = np.array([0] * 8) 
       pi = math.pi 
       ix = int(np.floor(theta_ix / (-pi/4) + 4))
-      theta_vec[ix] = 1 
-      vec_list.append(theta_vec)
-  vec = np.ravel(np.array(vec_list))
-  return vec
+      theta_vec[ix] = 1       
+  return theta_vec 
 
 """
    FEATURE MATCHING (7 Points Implementation + 3 Points Write-up)
@@ -293,10 +303,42 @@ def window_vector(window, theta):
 """
 def match_features(feats0, feats1, scores0, scores1, mode='naive'):
    ##########################################################################
-   # TODO: YOUR CODE HERE
-   raise NotImplementedError('match_features')
+   X1, Y1 = np.shape(feats0)
+   X1, Y1 = np.shape(feats1)
+
+   if mode == 'naive':
+    matches = None 
+    scores = None 
+
+   else: 
+    matches = None 
+    scores = None 
    ##########################################################################
    return matches, scores
+
+def brute_force_search(feats0, feats2):
+   X1, Y1 = np.shape(feats0)
+   X2, Y2 = np.shape(feats1)
+   matches = np.array([0] * X1)
+
+   for i in range(X1): 
+    min_j = 0 
+    sec_min_j = 0 
+    min_dist = math.inf  
+    sec_min_dist = math.inf 
+    for j in range(X2):
+      dist = np.linalg.norm(feats0[i], feats1[j])
+      if dist < min_dist: 
+        sec_min_dist = min_dist
+        sec_min_j = min_j 
+        min_dist = dist 
+        min_j = j 
+      elif dist < sec_min_dist: 
+        sec_min_dist = min_dist
+        sec_min_j = min_j 
+    matches[i] = j
+
+
 
 """
    HOUGH TRANSFORM (7 Points Implementation + 3 Points Write-up)
