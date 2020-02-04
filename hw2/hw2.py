@@ -301,25 +301,26 @@ def box_calc(theta, x_val, y_val, width):
 """
 def match_features(feats0, feats1, scores0, scores1, mode='naive'):
    ##########################################################################
-   X1, Y1 = np.shape(feats0)
-   X1, Y1 = np.shape(feats1)
+  X1, Y1 = np.shape(feats0)
+  X1, Y1 = np.shape(feats1)
 
-   if mode == 'naive':
+  if mode == 'naive':
+    matches, scores = brute_force_search(feats0, feats1, scores0, scores1)
+
+  else: 
     matches = None 
     scores = None 
 
-   else: 
-    matches = None 
-    scores = None 
    ##########################################################################
    return matches, scores
 
-def brute_force_search(feats0, feats2):
-   X1, Y1 = np.shape(feats0)
-   X2, Y2 = np.shape(feats1)
-   matches = np.array([0] * X1)
+def brute_force_search(feats0, feats1, scores0, scores1):
+  X1, Y1 = np.shape(feats0)
+  X2, Y2 = np.shape(feats1)
+  matches = np.array([0] * X1)
+  scores = np.array([0] * X1)
 
-   for i in range(X1): 
+  for i in range(X1): 
     min_j = 0 
     sec_min_j = 0 
     min_dist = math.inf  
@@ -335,6 +336,9 @@ def brute_force_search(feats0, feats2):
         sec_min_dist = min_dist
         sec_min_j = min_j 
     matches[i] = j
+    scores[i] = min_dist / second_min_dist * (math.log(scores0[i]) * math.log(scores1[i]))
+  return matches, scores
+
 
 
 
