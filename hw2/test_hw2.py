@@ -34,8 +34,12 @@ def test_feats():
 	xs1, ys1, scores1 = find_interest_points(img1, N, 1.0)
 	feats0 = extract_features(img0, xs0, ys0, 1.0)
 	feats1 = extract_features(img1, xs1, ys1, 1.0)
-	return feats0, feats1
+	return feats0, feats1, scores0, scores1
 
+def test_matches(): 
+	f0, f1, s0, s1 = test_feats() 
+	m, s = match_features(f0, f1, s0, s1)
+	return m, s
 
 ##########
 

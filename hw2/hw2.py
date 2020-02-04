@@ -195,11 +195,10 @@ def extract_features(image, xs, ys, scale = 1.0): #need to fix
    return feats 
 
 def box_calc(theta, x_val, y_val, width): 
-  vec_list = []
+  theta_vec = np.array([0] * 8) 
   for x in range(x_val - width, x_val): 
     for y in range(y_val - width, y_val): 
       theta_ix = theta[x, y]
-      theta_vec = np.array([0] * 8) 
       pi = math.pi 
       ix = int(np.floor(theta_ix / (-pi/4) + 4))
       if ix == 8: 
@@ -320,24 +319,24 @@ def brute_force_search(feats0, feats1, scores0, scores1):
   X1, Y1 = np.shape(feats0)
   X2, Y2 = np.shape(feats1)
   matches = np.array([0] * X1)
-  scores = np.array([0] * X1)
+  scores = np.array([0.0] * X1)
   for i in range(X1): 
     min_j = 0 
     sec_min_j = 0 
     min_dist = math.inf  
     sec_min_dist = math.inf 
     for j in range(X2):
-      dist = np.linalg.norm(feats0[i], feats1[j])
+      dist = np.linalg.norm(feats0[i] - feats1[j])
       if dist < min_dist: 
         sec_min_dist = min_dist
         sec_min_j = min_j 
         min_dist = dist 
         min_j = j 
       elif dist < sec_min_dist: 
-        sec_min_dist = min_dist
-        sec_min_j = min_j 
-    matches[i] = j
-    scores[i] = min_dist / second_min_dist * (math.log(scores0[i]) * math.log(scores1[i]))
+        sec_min_dist = dist
+        sec_min_j = j
+    matches[i] = min_j
+    scores[i] = min_dist / sec_min_dist 
   return matches, scores
 
 
