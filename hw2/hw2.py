@@ -95,7 +95,7 @@ def find_interest_points(image, max_points = 200, scale = 1.0):
    alpha_trace = alpha * np.multiply(trace, trace)
    R = det - alpha_trace 
    theta = np.arctan2(Iy, Ix)
-   R = nonmax_suppress(R, theta) #same dimensions as image 
+   R = nonmax_suppress(R, theta) # same dimensions as image
 
    # finding max Rs 
    X, Y = np.shape(R)   
@@ -166,8 +166,6 @@ def extract_features(image, xs, ys, scale = 1.0): #need to fix
    width = 3 
    pad = int((3 * width * scale) // 2) # want 3 x 3 grid of width 3. So 9 x 9 grid. 
    new_image = pad_border(image, pad, pad)
-   xs = xs + pad 
-   ys = ys + pad
    Ix, Iy = sobel_gradients(image)
    theta = pad_border(np.arctan2(Ix, Iy), pad, pad)
    n = len(xs)
@@ -194,7 +192,7 @@ def extract_features(image, xs, ys, scale = 1.0): #need to fix
 
    feats = np.array(feats)
    ##########################################################################
-   return feats, xs, ys
+   return feats 
 
 def box_calc(theta, x_val, y_val, width): 
   vec_list = []
