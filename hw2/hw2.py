@@ -90,7 +90,7 @@ def find_interest_points(image, max_points = 200, scale = 1.0):
    Sy2 = conv_2d_gaussian(np.multiply(Iy, Iy), scale)
    Sxy = conv_2d_gaussian(np.multiply(Ix, Iy), scale) 
    det = np.multiply(Sx2, Sy2) - np.multiply(Sxy, Sxy)
-   alpha = 0.05
+   alpha = 0.06
    trace = Sx2 + Sy2 
    alpha_trace = alpha * np.multiply(trace, trace)
    R = det - alpha_trace 
@@ -202,6 +202,8 @@ def box_calc(theta, x_val, y_val, width):
       theta_vec = np.array([0] * 8) 
       pi = math.pi 
       ix = int(np.floor(theta_ix / (-pi/4) + 4))
+      if ix == 8: 
+        ix = 7 #edge case 
       theta_vec[ix] += 1       
   return theta_vec 
 
@@ -311,15 +313,14 @@ def match_features(feats0, feats1, scores0, scores1, mode='naive'):
     matches = None 
     scores = None 
 
-   ##########################################################################
-   return matches, scores
+  ###########################################################################
+  return matches, scores
 
 def brute_force_search(feats0, feats1, scores0, scores1):
   X1, Y1 = np.shape(feats0)
   X2, Y2 = np.shape(feats1)
   matches = np.array([0] * X1)
   scores = np.array([0] * X1)
-
   for i in range(X1): 
     min_j = 0 
     sec_min_j = 0 
