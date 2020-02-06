@@ -2,6 +2,7 @@ import numpy as np
 from canny import *
 import operator
 import math 
+import random 
 
 """
    INTEREST POINT OPERATOR (12 Points Implementation + 3 Points Write-up)
@@ -315,6 +316,45 @@ def match_features(feats0, feats1, scores0, scores1, mode='naive'):
   ###########################################################################
   return matches, scores
 
+
+class kdnode():
+  def __init__(self, features=None, left=None, right=None): 
+    self.left = left 
+    self.right = right 
+    self.features = features 
+
+def build_kdtree(feats, depth=16):
+
+  N, K = np.shape(feats)
+  split_index = random.sample(range(0, K), 1) 
+  kdtree = kdnode(feats)
+  left_indices = []
+  right_indices = []
+
+  # Base case: 
+  if depth == 0: 
+    return None 
+
+  # Recursive step 
+  for i in range(N): 
+    if feats[i][split_index] < 1: 
+      left_indices.append(i)
+    else: 
+      right_indices.append(i)
+
+  if left_indices == []:
+    kdtree.left = None
+  else: 
+    kdtree.left = build_kdtree(feats[left_indices], depth - 1)
+  if right_indices == []:
+    kdtree.right = None
+  else: 
+    kdtree.right = build_kdtree(feats[right_indices], depth - 1)
+
+  return kdtree 
+
+
+
 def brute_force_search(feats0, feats1, scores0, scores1):
   X1, Y1 = np.shape(feats0)
   X2, Y2 = np.shape(feats1)
@@ -338,9 +378,6 @@ def brute_force_search(feats0, feats1, scores0, scores1):
     matches[i] = min_j
     scores[i] = min_dist / sec_min_dist 
   return matches, scores
-
-
-
 
 """
    HOUGH TRANSFORM (7 Points Implementation + 3 Points Write-up)
