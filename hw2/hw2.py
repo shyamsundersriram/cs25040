@@ -310,8 +310,8 @@ def match_features(feats0, feats1, scores0, scores1, mode='naive'):
     matches, scores = brute_force_search(feats0, feats1, scores0, scores1)
 
   else: 
-    matches = None 
-    scores = None 
+    matches, scores = kdtree_NN(feats0, feats1, scores0, scores1, depth=16)
+     
 
   ###########################################################################
   return matches, scores
@@ -341,7 +341,6 @@ def build_kdtree(feats, feat_indices, split_indices, depth=16):
       left_indices.append(i)
     else: 
       right_indices.append(i)
-
   if left_indices == []:
     kdtree.left = None
   else: 
@@ -352,33 +351,36 @@ def build_kdtree(feats, feat_indices, split_indices, depth=16):
     kdtree.right = build_kdtree(feats, right_indices, split_indices, depth - 1)
   return kdtree 
 
-def kdtree_NN(feats0, feats1, depth=16): 
+def kdtree_NN(feats0, feats1, scores0, scores1, depth=5): 
 
   # pre-processing
   N0, K0 = np.shape(feats0)
   N1, K1 = np.shape(feats1)
   split1 = random.sample(range(0, K1), depth) 
-  kd1 = build_kdtree(feats1, depth, split1)
+  feat_indices1 = [k for k in range(N1)]
+  kd1 = build_kdtree(feats1, feat_indices1, split1, depth)
+  scores = np.zeros(N0)
+  matches = np.zeros(N0)
 
-  for feat0 in feats0:
+  for i in range(N0):
     kd1_copy = kd1 #shallow copy 
-    while kd1: 
-      for split in split1:
-        if feat0[split] < 1: 
-          kd1 = kd1.left 
+    for split in split1:  
+      kd1_copy = kd1 #shallow copy 
+      while kd1_copy: 
+        feat_indices = kd1_copy.feat_indices
+        if feats0[i][split] < 1: 
+          kd1_copy = kd1_copy.left 
         else: 
-          kd1 = kd1.right 
+          kd1_copy = kd1_copy.right
+    min_dist = math.inf 
+    for j in feat_indices:
+      dist = np.linalg.norm(feats0[i] - feats1[j])
+      if dist < min_dist: 
+        min_dist = dist
+        matches[i] = j 
+        scores[i] = dist
 
-
-
-
-
-  #finding nearest neighbor 
-
-
-
-
-
+  return matches, scores 
 
 
 def brute_force_search(feats0, feats1, scores0, scores1):

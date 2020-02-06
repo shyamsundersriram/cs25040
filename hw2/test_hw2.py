@@ -54,7 +54,10 @@ def test_kdtree():
 	t = build_kdtree(img, feat_indices, split_indices, depth)
 	return t                       
 
-
+def test_matches_kd(): 
+	f0, f1, s0, s1 = test_feats() 
+	m, s = match_features(f0, f1, s0, s1, 'kdtree')
+	return m, s
 
 ##########
 
