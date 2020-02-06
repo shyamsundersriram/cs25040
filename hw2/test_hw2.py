@@ -4,6 +4,7 @@ from scipy import ndimage
 import matplotlib.pyplot as plt
 import PIL, pickle, time, glob
 from util import *
+import random 
 
 
 #image_str = "data/checker.png"
@@ -40,6 +41,20 @@ def test_matches():
 	f0, f1, s0, s1 = test_feats() 
 	m, s = match_features(f0, f1, s0, s1)
 	return m, s
+
+def test_kdtree(): 
+	img = np.array([[0, 0, 1, 2, 3], 
+				   [3, 3, 2, 6, 2], 
+				   [3, 9, 5, 8, 0], 
+				   [0, 1, 0, 0, 6], 
+				   [2, 3, 7, 0, 0]]) 
+	depth = 3
+	split_indices = random.sample(range(0, 5), depth)
+	feat_indices = [i for i in range(0, 5)]  
+	t = build_kdtree(img, feat_indices, split_indices, depth)
+	return t                       
+
+
 
 ##########
 

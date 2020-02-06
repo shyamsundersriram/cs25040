@@ -318,16 +318,16 @@ def match_features(feats0, feats1, scores0, scores1, mode='naive'):
 
 
 class kdnode():
-  def __init__(self, features=None, left=None, right=None): 
+  def __init__(self, features=None, indices=None, left=None, right=None): 
     self.left = left 
     self.right = right 
     self.features = features 
+    self.feat_indices = indices
 
-def build_kdtree(feats, depth=16):
+def build_kdtree(feats, feat_indices, split_indices, depth=16):
 
   N, K = np.shape(feats)
-  split_index = random.sample(range(0, K), 1) 
-  kdtree = kdnode(feats)
+  kdtree = kdnode(feats, feat_indices)
   left_indices = []
   right_indices = []
 
@@ -336,8 +336,8 @@ def build_kdtree(feats, depth=16):
     return None 
 
   # Recursive step 
-  for i in range(N): 
-    if feats[i][split_index] < 1: 
+  for i in feat_indices: 
+    if feats[i][split_indices[-depth]] < 1: 
       left_indices.append(i)
     else: 
       right_indices.append(i)
@@ -345,13 +345,39 @@ def build_kdtree(feats, depth=16):
   if left_indices == []:
     kdtree.left = None
   else: 
-    kdtree.left = build_kdtree(feats[left_indices], depth - 1)
+    kdtree.left = build_kdtree(feats, left_indices, split_indices, depth - 1)
   if right_indices == []:
     kdtree.right = None
   else: 
-    kdtree.right = build_kdtree(feats[right_indices], depth - 1)
-
+    kdtree.right = build_kdtree(feats, right_indices, split_indices, depth - 1)
   return kdtree 
+
+def kdtree_NN(feats0, feats1, depth=16): 
+
+  # pre-processing
+  N0, K0 = np.shape(feats0)
+  N1, K1 = np.shape(feats1)
+  split1 = random.sample(range(0, K1), depth) 
+  kd1 = build_kdtree(feats1, depth, split1)
+
+  for feat0 in feats0:
+    kd1_copy = kd1 #shallow copy 
+    while kd1: 
+      for split in split1:
+        if feat0[split] < 1: 
+          kd1 = kd1.left 
+        else: 
+          kd1 = kd1.right 
+
+
+
+
+
+  #finding nearest neighbor 
+
+
+
+
 
 
 
