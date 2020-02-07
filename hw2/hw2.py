@@ -322,7 +322,7 @@ class kdnode():
   def __init__(self, features=None, indices=None, left=None, right=None, parent=None): 
     self.left = left 
     self.right = right 
-    self.features = features 
+    #self.features = features 
     self.feat_indices = indices
     self.parent = None 
 
@@ -335,7 +335,7 @@ def build_kdtree(feats, feat_indices, split_indices, depth=16):
 
   # Base case: 
   if depth == 0: 
-    return None 
+    return None
 
   # Recursive step 
   for i in feat_indices: 
@@ -346,11 +346,11 @@ def build_kdtree(feats, feat_indices, split_indices, depth=16):
   if left_indices == []:
     kdtree.left = None
   else: 
-    kdtree.left = build_kdtree(feats, left_indices, split_indices, depth - 1, kdtree)
+    kdtree.left = build_kdtree(feats, left_indices, split_indices, depth - 1)
   if right_indices == []:
     kdtree.right = None
   else: 
-    kdtree.right = build_kdtree(feats, right_indices, split_indices, depth - 1, kdtree)
+    kdtree.right = build_kdtree(feats, right_indices, split_indices, depth - 1)
   return kdtree 
 
 def kdtree_NN(feats0, feats1, scores0, scores1, depth=16): 
