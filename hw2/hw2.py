@@ -157,7 +157,7 @@ def find_interest_points(image, max_points = 200, scale = 1.0):
                  feature descriptors at each of the N input locations
                  (using the default scheme suggested above, K = 72)
 """
-def extract_features(image, xs, ys, scale = 1.0): #need to fix 
+def extract_features(image, xs, ys, scale = 1.0): 
    # check that image is grayscale
    assert image.ndim == 2, 'image should be grayscale'
    ##########################################################################
@@ -392,7 +392,7 @@ def kdtree_NN(feats0, feats1, depth=5):
         sec_min_dist = dist
         sec_min_j = j
     matches[i] = int(min_j)
-    if sec_min_dist == math.inf: #case when there is 
+    if sec_min_dist == math.inf: #case when there is only one nearest neighbor in tree 
       scores[i] = 1
     else: 
       scores[i] = min_dist / sec_min_dist 
@@ -463,31 +463,31 @@ def brute_force_search(feats0, feats1):
 """
 def hough_votes(xs0, ys0, xs1, ys1, matches, scores):
   ###########################################################################
-  
-  width = max(np.max(xs0) - np.min(xs0), np.max(xs1) - np.min(xs1)) 
-  height = max(np.max(ys0) - np.min(ys0), np.max(ys1) - np.min(ys1)) 
-  diag_len = int(np.ceil(np.sqrt(width * width + height * height)))
-  rhos = np.linspace(- diag_len, diag_len, (diag_len * 2  + 1)) #interval of 1 
-  votes = np.zeros((len(rhos), len(rhos)))
+  offset_x = []
+  offset_y = []
 
   for ix_0 in range(len(matches)): 
     ix_1 = matches[ix_0]
-    delta_x = np.floor(xs1[ix_1] - xs0[ix_0])
-    delta_y = np.floor(ys1[ix_1] - ys0[ix_0]) 
+    offset_x.append(xs0[ix_0] - xs1[ix_1])
+    offset_y.append(ys0[ix_0] - ys1[ix_1])
 
-    #finding the indices 
-    x = int(2 * (delta_x // diag_len) + (delta_x % diag_len))
-    y = int(2 * (delta_y // diag_len) + (delta_x % diag_len))
+  min_x = min(offset_x)
+  min_y = min(offset_y)
 
-    votes[x, y] += scores[ix_0]
+  dim_x = max(offset_x) - min(offset_x)
+  dim_y = max(offset_y) - min(offset_y)
+  votes = np.zeros((dim_y + 1, dim_x + 1))
 
-  # Get the mode to avoid noise from extreme points. 
-  val = np.argmax(votes)
-  tx = int(rhos[val // (diag_len)])
-  ty = int(rhos[val % (diag_len)])
 
-  tx = 30 
-  ty = 30
+  for ix in range(dim_x): 
+    x = offset_x[ix] - min_x
+    y = offset_y[ix] - min_y
+    votes[y, x] += scores[ix]
+
+  val = np.unravel_index(np.argmax(votes), votes.shape)
+  ty = val[0] + min_y
+  tx = val[1] + min_x 
+  print(tx, ty)
 
    ##########################################################################
   return tx, ty, votes
