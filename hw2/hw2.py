@@ -362,10 +362,11 @@ def kdtree_NN(feats0, feats1, scores0, scores1, depth=16):
   feat_indices1 = [k for k in range(N1)]
   kd1 = build_kdtree(feats1, feat_indices1, split1, depth)
   scores = np.zeros(N0)
-  matches = np.zeros(N0)
+  matches = np.zeros(N0, dtype=int)
 
   for i in range(N0):
     kd1_copy = kd1 #shallow copy 
+    feat_indices = kd1.feat_indices 
     for split in split1:  
       if not kd1_copy: 
         break 
@@ -391,7 +392,7 @@ def kdtree_NN(feats0, feats1, scores0, scores1, depth=16):
         sec_min_j = j
     matches[i] = int(min_j)
     if sec_min_dist == math.inf: 
-      scores[i] = 1
+      scores[i] = 1 
     else: 
       scores[i] = min_dist / sec_min_dist 
 
