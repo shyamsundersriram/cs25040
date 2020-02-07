@@ -466,25 +466,27 @@ def hough_votes(xs0, ys0, xs1, ys1, matches, scores):
   
   width = max(np.max(xs0) - np.min(xs0), np.max(xs1) - np.min(xs1)) 
   height = max(np.max(ys0) - np.min(ys0), np.max(ys1) - np.min(ys1)) 
-  diag_len = np.ceil(np.sqrt(width * width + height * height))
-  rhos = np.linspace(-diag_len, diag_len, (diag_len * 2.0  + 1)) #interval of 1 
+  diag_len = int(np.ceil(np.sqrt(width * width + height * height)))
+  rhos = np.linspace(- diag_len, diag_len, (diag_len * 2  + 1)) #interval of 1 
   votes = np.zeros((len(rhos), len(rhos)))
 
   for ix_0 in range(len(matches)): 
-    ix_1 = matches[i]
+    ix_1 = matches[ix_0]
     delta_x = np.floor(xs0[ix_0] - xs1[ix_1])
     delta_y = np.floor(ys0[ix_0] - ys1[ix_1]) 
 
     #finding the indices 
-    x = 2 * (delta_x // diag_len) + (delta_x % diag_len)
-    y = 2 * (delta_y // diag_len) + (delta_x % diag_len)
+    x = int(2 * (delta_x // diag_len) + (delta_x % diag_len))
+    y = int(2 * (delta_y // diag_len) + (delta_x % diag_len))
 
     votes[x, y] += scores[ix_0]
 
   # Get the mode to avoid noise from extreme points. 
   val = np.argmax(votes)
-  tx = rhos[val // diag_len]
-  ty = rhos[val % diag_len]
+  tx = int(rhos[val // diag_len])
+  ty = int(rhos[val % diag_len])
+
+
 
    ##########################################################################
   return tx, ty, votes
