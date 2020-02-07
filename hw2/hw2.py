@@ -479,7 +479,7 @@ def hough_votes(xs0, ys0, xs1, ys1, matches, scores):
   votes = np.zeros((dim_x + 1, dim_y + 1))
 
 
-  for ix in range(dim_x): 
+  for ix in range(len(offset_x)): 
     x = offset_x[ix] - min_x
     y = offset_y[ix] - min_y
     votes[x, y] += scores[ix]
