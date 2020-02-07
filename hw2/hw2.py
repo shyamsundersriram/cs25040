@@ -303,11 +303,12 @@ def box_calc(theta, x_val, y_val, width):
 """
 def match_features(feats0, feats1, scores0, scores1, mode='naive'):
    ##########################################################################
-  X1, Y1 = np.shape(feats0)
-  X1, Y1 = np.shape(feats1)
+  N0, K0 = np.shape(feats0)
+  N1, K1 = np.shape(feats1)
 
   if mode == 'naive':
     matches, scores = brute_force_search(feats0, feats1, scores0, scores1)
+    #scores = np.array([scores0[i] * scores1[matches[i]] for i in range(N0)])
 
   else: 
     matches, scores = kdtree_NN(feats0, feats1, scores0, scores1, depth=16)
@@ -318,11 +319,12 @@ def match_features(feats0, feats1, scores0, scores1, mode='naive'):
 
 
 class kdnode():
-  def __init__(self, features=None, indices=None, left=None, right=None): 
+  def __init__(self, features=None, indices=None, left=None, right=None, parent=None): 
     self.left = left 
     self.right = right 
     self.features = features 
     self.feat_indices = indices
+    self.parent = None 
 
 def build_kdtree(feats, feat_indices, split_indices, depth=16):
 
@@ -344,14 +346,14 @@ def build_kdtree(feats, feat_indices, split_indices, depth=16):
   if left_indices == []:
     kdtree.left = None
   else: 
-    kdtree.left = build_kdtree(feats, left_indices, split_indices, depth - 1)
+    kdtree.left = build_kdtree(feats, left_indices, split_indices, depth - 1, kdtree)
   if right_indices == []:
     kdtree.right = None
   else: 
-    kdtree.right = build_kdtree(feats, right_indices, split_indices, depth - 1)
+    kdtree.right = build_kdtree(feats, right_indices, split_indices, depth - 1, kdtree)
   return kdtree 
 
-def kdtree_NN(feats0, feats1, scores0, scores1, depth=5): 
+def kdtree_NN(feats0, feats1, scores0, scores1, depth=16): 
 
   # pre-processing
   N0, K0 = np.shape(feats0)
@@ -365,23 +367,41 @@ def kdtree_NN(feats0, feats1, scores0, scores1, depth=5):
   for i in range(N0):
     kd1_copy = kd1 #shallow copy 
     for split in split1:  
-      kd1_copy = kd1 #shallow copy 
-      while kd1_copy: 
-        feat_indices = kd1_copy.feat_indices
-        if feats0[i][split] < 1: 
-          kd1_copy = kd1_copy.left 
-        else: 
-          kd1_copy = kd1_copy.right
+      if not kd1_copy: 
+        break 
+      feat_indices = kd1_copy.feat_indices
+      if feats0[i][split] < 1: 
+        kd1_copy = kd1_copy.left 
+      else: 
+        kd1_copy = kd1_copy.right
+
     min_dist = math.inf 
+    sec_min_dist = math.inf
+    min_j = 0 
+    sec_min_j = 0  
     for j in feat_indices:
       dist = np.linalg.norm(feats0[i] - feats1[j])
       if dist < min_dist: 
-        min_dist = dist
-        matches[i] = j 
-        scores[i] = dist
+        sec_min_dist = min_dist
+        sec_min_j = min_j 
+        min_dist = dist 
+        min_j = j 
+      elif dist < sec_min_dist: 
+        sec_min_dist = dist
+        sec_min_j = j
+    matches[i] = int(min_j)
+    if sec_min_dist == math.inf: 
+      scores[i] = 1
+    else: 
+      scores[i] = min_dist / sec_min_dist 
+
+      #dist = np.linalg.norm(feats0[i] - feats1[j])
+      #if dist < min_dist: 
+      #  min_dist = dist
+      #  matches[i] = j 
+      #  scores[i] = dist
 
   return matches, scores 
-
 
 def brute_force_search(feats0, feats1, scores0, scores1):
   X1, Y1 = np.shape(feats0)
