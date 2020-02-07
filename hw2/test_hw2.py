@@ -25,9 +25,11 @@ def test_interest(max_points=200, scale=1.0):
 	#plt.imshow(R, cmap="gray")
 	#plt.show()
 	#return R 
-	xs, ys, scores = find_interest_points(image, max_points, scale)
-	plot_interest_points(image, xs, ys, scores)
-	plt.show()
+	xs0, ys0, scores0 = find_interest_points(img1, max_points, scale)
+	xs1, ys1, scores1 = find_interest_points(img1, max_points, scale)
+	#plot_interest_points(image, xs, ys, scores)
+	#plt.show()
+	return xs0, xs1, ys0, ys1, scores0, scores1 
 
 def test_feats(): 
 	N = 200
@@ -59,6 +61,21 @@ def test_matches_kd():
 	m, s = match_features(f0, f1, s0, s1, 'kdtree')
 	return m, s
 
+def setup_hough_votes(): 
+
+	xs0, xs1, ys0, ys1, scores0, scores1 = test_interest(200, 1.0)
+	print('found interest points')
+	m, s = test_matches() 
+	print('found matches')
+	return xs0, xs1, ys0, ys1, m, s
+	#tx, ty, votes = hough_votes(xs0, xs1, ys0, ys1, m, s)
+	#return tx, ty, votes
+
+
+def test_hough_votes(xs0, xs1, ys0, ys1, m, s): 
+	tx, ty, votes = hough_votes(xs0, xs1, ys0, ys1, m, s)
+	show_overlay(img0, img1, tx, ty)
+	plt.show()
 ##########
 
 

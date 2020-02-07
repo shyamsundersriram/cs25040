@@ -307,11 +307,11 @@ def match_features(feats0, feats1, scores0, scores1, mode='naive'):
   N1, K1 = np.shape(feats1)
 
   if mode == 'naive':
-    matches, scores = brute_force_search(feats0, feats1, scores0, scores1)
+    matches, scores = brute_force_search(feats0, feats1)
     #scores = np.array([scores0[i] * scores1[matches[i]] for i in range(N0)])
 
   else: 
-    matches, scores = kdtree_NN(feats0, feats1, scores0, scores1, 5)
+    matches, scores = kdtree_NN(feats0, feats1, 5)
      
 
   ###########################################################################
@@ -353,7 +353,7 @@ def build_kdtree(feats, feat_indices, split_indices, depth=5):
     kdtree.right = build_kdtree(feats, right_indices, split_indices, depth - 1)
   return kdtree 
 
-def kdtree_NN(feats0, feats1, scores0, scores1, depth=5): 
+def kdtree_NN(feats0, feats1, depth=5): 
 
   # pre-processing
   N0, K0 = np.shape(feats0)
@@ -399,7 +399,7 @@ def kdtree_NN(feats0, feats1, scores0, scores1, depth=5):
 
   return matches, scores 
 
-def brute_force_search(feats0, feats1, scores0, scores1):
+def brute_force_search(feats0, feats1):
   X1, Y1 = np.shape(feats0)
   X2, Y2 = np.shape(feats1)
   matches = np.array([0] * X1)
@@ -472,8 +472,8 @@ def hough_votes(xs0, ys0, xs1, ys1, matches, scores):
 
   for ix_0 in range(len(matches)): 
     ix_1 = matches[ix_0]
-    delta_x = np.floor(xs0[ix_0] - xs1[ix_1])
-    delta_y = np.floor(ys0[ix_0] - ys1[ix_1]) 
+    delta_x = np.floor(xs1[ix_1] - xs0[ix_0])
+    delta_y = np.floor(ys1[ix_1] - ys0[ix_0]) 
 
     #finding the indices 
     x = int(2 * (delta_x // diag_len) + (delta_x % diag_len))
@@ -483,10 +483,11 @@ def hough_votes(xs0, ys0, xs1, ys1, matches, scores):
 
   # Get the mode to avoid noise from extreme points. 
   val = np.argmax(votes)
-  tx = int(rhos[val // diag_len])
-  ty = int(rhos[val % diag_len])
+  tx = int(rhos[val // (diag_len)])
+  ty = int(rhos[val % (diag_len)])
 
-
+  tx = 30 
+  ty = 30
 
    ##########################################################################
   return tx, ty, votes
