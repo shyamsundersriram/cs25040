@@ -238,7 +238,7 @@ def box_calc(theta, x_val, y_val, width):
       feats1   - a numpy array of shape (N1, K), containing N1 K-dimensional
                  feature descriptors (generated via extract_features())
       scores0  - a numpy array of shape (N0,) containing the scores for the
-                 interest point locations at which feats0 was extracted
+                 interest point locations at which feats0 was extracted 
                  (generated via find_interest_point())
       scores1  - a numpy array of shape (N1,) containing the scores for the
                  interest point locations at which feats1 was extracted
@@ -311,7 +311,7 @@ def match_features(feats0, feats1, scores0, scores1, mode='naive'):
     #scores = np.array([scores0[i] * scores1[matches[i]] for i in range(N0)])
 
   else: 
-    matches, scores = kdtree_NN(feats0, feats1, scores0, scores1, depth=16)
+    matches, scores = kdtree_NN(feats0, feats1, scores0, scores1, 5)
      
 
   ###########################################################################
@@ -326,7 +326,7 @@ class kdnode():
     self.feat_indices = indices
     self.parent = None 
 
-def build_kdtree(feats, feat_indices, split_indices, depth=16):
+def build_kdtree(feats, feat_indices, split_indices, depth=5):
 
   N, K = np.shape(feats)
   kdtree = kdnode(feats, feat_indices)
@@ -353,7 +353,7 @@ def build_kdtree(feats, feat_indices, split_indices, depth=16):
     kdtree.right = build_kdtree(feats, right_indices, split_indices, depth - 1)
   return kdtree 
 
-def kdtree_NN(feats0, feats1, scores0, scores1, depth=16): 
+def kdtree_NN(feats0, feats1, scores0, scores1, depth=5): 
 
   # pre-processing
   N0, K0 = np.shape(feats0)
@@ -363,6 +363,7 @@ def kdtree_NN(feats0, feats1, scores0, scores1, depth=16):
   kd1 = build_kdtree(feats1, feat_indices1, split1, depth)
   scores = np.zeros(N0)
   matches = np.zeros(N0, dtype=int)
+  medians = np.median(feats1, axis=0)
 
   for i in range(N0):
     kd1_copy = kd1 #shallow copy 
@@ -391,16 +392,10 @@ def kdtree_NN(feats0, feats1, scores0, scores1, depth=16):
         sec_min_dist = dist
         sec_min_j = j
     matches[i] = int(min_j)
-    if sec_min_dist == math.inf: 
-      scores[i] = 1 
+    if sec_min_dist == math.inf: #case when there is 
+      scores[i] = 1
     else: 
       scores[i] = min_dist / sec_min_dist 
-
-      #dist = np.linalg.norm(feats0[i] - feats1[j])
-      #if dist < min_dist: 
-      #  min_dist = dist
-      #  matches[i] = j 
-      #  scores[i] = dist
 
   return matches, scores 
 
@@ -467,8 +462,29 @@ def brute_force_search(feats0, feats1, scores0, scores1):
                 your own convenience and you are free to design its format
 """
 def hough_votes(xs0, ys0, xs1, ys1, matches, scores):
+  ###########################################################################
+  
+  width = max(np.max(xs0) - np.min(xs0), np.max(xs1) - np.min(xs1)) 
+  height = max(np.max(ys0) - np.min(ys0), np.max(ys1) - np.min(ys1)) 
+  diag_len = np.ceil(np.sqrt(width * width + height * height))
+  rhos = np.linspace(-diag_len, diag_len, (diag_len * 2.0  + 1)) #interval of 1 
+  votes = np.zeros((len(rhos), len(rhos)))
+
+  for ix_0 in range(len(matches)): 
+    ix_1 = matches[i]
+    delta_x = np.floor(xs0[ix_0] - xs1[ix_1])
+    delta_y = np.floor(ys0[ix_0] - ys1[ix_1]) 
+
+    #finding the indices 
+    x = 2 * (delta_x // diag_len) + (delta_x % diag_len)
+    y = 2 * (delta_y // diag_len) + (delta_x % diag_len)
+
+    votes[x, y] += scores[ix_0]
+
+  # Get the mode to avoid noise from extreme points. 
+  val = np.argmax(votes)
+  tx = rhos[val // diag_len]
+  ty = rhos[val % diag_len]
+
    ##########################################################################
-   # TODO: YOUR CODE HERE
-   raise NotImplementedError('hough_votes')
-   ##########################################################################
-   return tx, ty, votes
+  return tx, ty, votes
