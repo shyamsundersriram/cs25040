@@ -476,18 +476,18 @@ def hough_votes(xs0, ys0, xs1, ys1, matches, scores):
 
   dim_x = max(offset_x) - min(offset_x)
   dim_y = max(offset_y) - min(offset_y)
-  votes = np.zeros((dim_y + 1, dim_x + 1))
+  votes = np.zeros((dim_x + 1, dim_y + 1))
 
 
   for ix in range(dim_x): 
     x = offset_x[ix] - min_x
     y = offset_y[ix] - min_y
-    votes[y, x] += scores[ix]
+    votes[x, y] += scores[ix]
 
   val = np.unravel_index(np.argmax(votes), votes.shape)
-  ty = val[0] + min_y
-  tx = val[1] + min_x 
-  print(tx, ty)
+  ty = val[1] + min_y
+  tx = val[0] + min_x 
+  #print(tx, ty)
 
    ##########################################################################
   return tx, ty, votes
