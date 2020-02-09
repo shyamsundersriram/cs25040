@@ -377,26 +377,7 @@ def kdtree_NN(feats0, feats1, depth=5):
       else: 
         kd1_copy = kd1_copy.right
 
-    min_dist = math.inf 
-    sec_min_dist = math.inf
-    min_j = 0 
-    sec_min_j = 0  
-    for j in feat_indices:
-      dist = np.linalg.norm(feats0[i] - feats1[j])
-      if dist < min_dist: 
-        sec_min_dist = min_dist
-        sec_min_j = min_j 
-        min_dist = dist 
-        min_j = j 
-      elif dist < sec_min_dist: 
-        sec_min_dist = dist
-        sec_min_j = j
-    matches[i] = int(min_j)
-
-    if sec_min_dist == math.inf or sec_min_dist == 0: #case when there is only one nearest neighbor in tree 
-      scores[i] = 1
-    else: 
-      scores[i] = min_dist / sec_min_dist 
+    matches[i], scores[i] = find_NN(feats0[i], feats1[feat_indices])
 
   return matches, scores 
 
@@ -406,27 +387,31 @@ def brute_force_search(feats0, feats1):
   matches = np.array([0] * X1)
   scores = np.array([0.0] * X1)
   for i in range(X1): 
-    min_j = 0 
-    sec_min_j = 0 
-    min_dist = math.inf  
-    sec_min_dist = math.inf 
-    for j in range(X2):
-      dist = np.linalg.norm(feats0[i] - feats1[j])
-      if dist < min_dist: 
-        sec_min_dist = min_dist
-        sec_min_j = min_j 
-        min_dist = dist 
-        min_j = j 
-      elif dist < sec_min_dist: 
-        sec_min_dist = dist
-        sec_min_j = j
-    matches[i] = min_j
-
-    if sec_min_dist == math.inf or sec_min_dist == 0: #case when there is only one nearest neighbor
-      scores[i] = 1
-    else: 
-      scores[i] = min_dist / sec_min_dist 
+    matches[i], scores[i] = find_NN(feats0[i], feats1)
   return matches, scores
+
+
+def find_NN(feat0, feats1): 
+  X, Y = np.shape(feats1)
+  min_j = 0 
+  sec_min_j = 0 
+  min_dist = math.inf  
+  sec_min_dist = math.inf 
+  for j in range(X):
+    dist = np.linalg.norm(feat0 - feats1[j])
+    if dist < min_dist: 
+      sec_min_dist = min_dist
+      sec_min_j = min_j 
+      min_dist = dist 
+      min_j = j 
+    elif dist < sec_min_dist: 
+      sec_min_dist = dist
+      sec_min_j = j
+  if sec_min_dist == math.inf or sec_min_dist == 0: #case when there is only one nearest neighbor
+    score = 1
+  else: 
+    score = min_dist / sec_min_dist 
+  return min_j, score 
 
 """
    HOUGH TRANSFORM (7 Points Implementation + 3 Points Write-up)
