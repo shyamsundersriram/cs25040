@@ -326,7 +326,7 @@ class kdnode():
     self.feat_indices = indices
     self.parent = None 
 
-def build_kdtree(feats, feat_indices, split_indices, depth=5):
+def build_kdtree(feats, feat_indices, split_indices, medians, depth=5):
 
   N, K = np.shape(feats)
   kdtree = kdnode(feats, feat_indices)
@@ -339,18 +339,18 @@ def build_kdtree(feats, feat_indices, split_indices, depth=5):
 
   # Recursive step 
   for i in feat_indices: 
-    if feats[i][split_indices[-depth]] < 1: 
+    if feats[i][split_indices[-depth]] < medians[split_indices[-depth]]: 
       left_indices.append(i)
     else: 
       right_indices.append(i)
   if left_indices == []:
     kdtree.left = None
   else: 
-    kdtree.left = build_kdtree(feats, left_indices, split_indices, depth - 1)
+    kdtree.left = build_kdtree(feats, left_indices, split_indices, medians, depth - 1)
   if right_indices == []:
     kdtree.right = None
   else: 
-    kdtree.right = build_kdtree(feats, right_indices, split_indices, depth - 1)
+    kdtree.right = build_kdtree(feats, right_indices, split_indices, medians, depth - 1)
   return kdtree 
 
 def kdtree_NN(feats0, feats1, depth=5): 
@@ -360,10 +360,10 @@ def kdtree_NN(feats0, feats1, depth=5):
   N1, K1 = np.shape(feats1)
   split1 = random.sample(range(0, K1), depth) 
   feat_indices1 = [k for k in range(N1)]
-  kd1 = build_kdtree(feats1, feat_indices1, split1, depth)
+  medians = np.median(feats1, axis=0)
+  kd1 = build_kdtree(feats1, feat_indices1, split1, medians, depth)
   scores = np.zeros(N0)
   matches = np.zeros(N0, dtype=int)
-  medians = np.median(feats1, axis=0)
 
   for i in range(N0):
     kd1_copy = kd1 #shallow copy 
@@ -372,7 +372,7 @@ def kdtree_NN(feats0, feats1, depth=5):
       if not kd1_copy: 
         break 
       feat_indices = kd1_copy.feat_indices
-      if feats0[i][split] < 1: 
+      if feats0[i][split] < medians[split]: 
         kd1_copy = kd1_copy.left 
       else: 
         kd1_copy = kd1_copy.right
@@ -420,7 +420,7 @@ def brute_force_search(feats0, feats1):
         sec_min_dist = dist
         sec_min_j = j
     matches[i] = min_j
-    scores[i] = min_dist / sec_min_dist 
+    scores[i] = min_dist / sec_min_dist
   return matches, scores
 
 """
@@ -487,7 +487,6 @@ def hough_votes(xs0, ys0, xs1, ys1, matches, scores):
   val = np.unravel_index(np.argmax(votes), votes.shape)
   ty = val[1] + min_y
   tx = val[0] + min_x 
-  #print(tx, ty)
 
    ##########################################################################
   return tx, ty, votes
