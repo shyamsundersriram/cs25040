@@ -81,7 +81,7 @@ import random
                     measurement of the relative strength of each interest point
                     (e.g. corner detector criterion OR DoG operator magnitude)
 """
-def find_interest_points(image, max_points = 200, scale = 1.0):
+def find_interest_points(image, max_points =100, scale = 1.0):
    # check that image is grayscale
    assert image.ndim == 2, 'image should be grayscale'
    ##########################################################################
@@ -392,7 +392,8 @@ def kdtree_NN(feats0, feats1, depth=5):
         sec_min_dist = dist
         sec_min_j = j
     matches[i] = int(min_j)
-    if sec_min_dist == math.inf: #case when there is only one nearest neighbor in tree 
+
+    if sec_min_dist == math.inf or sec_min_dist == 0: #case when there is only one nearest neighbor in tree 
       scores[i] = 1
     else: 
       scores[i] = min_dist / sec_min_dist 
@@ -420,7 +421,11 @@ def brute_force_search(feats0, feats1):
         sec_min_dist = dist
         sec_min_j = j
     matches[i] = min_j
-    scores[i] = min_dist / sec_min_dist
+
+    if sec_min_dist == math.inf or sec_min_dist == 0: #case when there is only one nearest neighbor
+      scores[i] = 1
+    else: 
+      scores[i] = min_dist / sec_min_dist 
   return matches, scores
 
 """
