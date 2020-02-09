@@ -41,7 +41,7 @@ def test_feats():
 
 def test_matches(): 
 	f0, f1, s0, s1 = test_feats() 
-	m, s = match_features(f0, f1, s0, s1)
+	m, s = match_features(f0, f1, s0, s1, 'naive')
 	return m, s
 
 def test_kdtree(): 
@@ -62,18 +62,17 @@ def test_matches_kd():
 	return m, s
 
 def setup_hough_votes(): 
-
 	xs0, xs1, ys0, ys1, scores0, scores1 = test_interest(200, 1.0)
 	print('found interest points')
 	m, s = test_matches() 
 	print('found matches')
-	return xs0, xs1, ys0, ys1, m, s
-	#tx, ty, votes = hough_votes(xs0, xs1, ys0, ys1, m, s)
-	#return tx, ty, votes
+	return xs0, ys0, xs1, ys1, m, s
 
 
-def test_hough_votes(xs0, xs1, ys0, ys1, m, s): 
-	tx, ty, votes = hough_votes(xs0, xs1, ys0, ys1, m, s)
+def test_hough_votes(xs0, ys0, xs1, ys1, m, s): 
+	tx, ty, votes = hough_votes(xs0, ys0, xs1, ys1, m, s)
+	plt.imshow(votes)
+	plt.show()
 	show_overlay(img0, img1, tx, ty)
 	plt.show()
 ##########
