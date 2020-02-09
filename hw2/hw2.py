@@ -87,9 +87,9 @@ def find_interest_points(image, max_points =100, scale = 1.0):
    ##########################################################################
    # calculating Rs 
    Ix, Iy = sobel_gradients(image)
-   Sx2 = conv_2d_gaussian(np.multiply(Ix, Ix), scale)
-   Sy2 = conv_2d_gaussian(np.multiply(Iy, Iy), scale)
-   Sxy = conv_2d_gaussian(np.multiply(Ix, Iy), scale) 
+   Sx2 = conv_2d_gaussian(np.multiply(Ix, Ix), 2 * scale)
+   Sy2 = conv_2d_gaussian(np.multiply(Iy, Iy), 2 * scale)
+   Sxy = conv_2d_gaussian(np.multiply(Ix, Iy), 2 * scale) 
    det = np.multiply(Sx2, Sy2) - np.multiply(Sxy, Sxy)
    alpha = 0.06
    trace = Sx2 + Sy2 
@@ -165,7 +165,7 @@ def extract_features(image, xs, ys, scale = 1.0):
    #pre-processing 
    # want width = 3 
    width = 3 
-   pad = int((3 * width * scale) // 2) # want 3 x 3 grid of width 3. So 9 x 9 grid. 
+   pad = int((6 * width * scale) // 2) # want 3 x 3 grid of width 3. So 9 x 9 grid. 
    new_image = pad_border(image, pad, pad)
    Ix, Iy = sobel_gradients(image)
    theta = pad_border(np.arctan2(Ix, Iy), pad, pad)
@@ -322,9 +322,7 @@ class kdnode():
   def __init__(self, features=None, indices=None, left=None, right=None, parent=None): 
     self.left = left 
     self.right = right 
-    #self.features = features 
     self.feat_indices = indices
-    self.parent = None 
 
 def build_kdtree(feats, feat_indices, split_indices, medians, depth=5):
 
@@ -408,7 +406,7 @@ def find_NN(feat0, feats1):
       sec_min_dist = dist
       sec_min_j = j
   if sec_min_dist == math.inf or sec_min_dist == 0: #case when there is only one nearest neighbor
-    score = 1
+    score = 0.8
   else: 
     score = min_dist / sec_min_dist 
   return min_j, score 
