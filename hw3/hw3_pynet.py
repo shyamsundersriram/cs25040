@@ -132,17 +132,17 @@ class BatchNorm1d(object):
     '''
     def forward(self, input_, train):
         self.N = input_.shape[0]
-        self.m = input_.shape[1]
+        self.input_channel = input_.shape[1]
         self.train = train 
         self.input = input_
         self.e_x = np.sum(input_, axis=0) / self.N
         self.r_mean = (1 - self.momentum) * self.e_x + self.momentum * self.r_mean 
-        self.var_x = np.sum((input_ - self.r_mean)**2, axis=0) / self.N
+        self.var_x = np.sum((input_ - self.e_x)**2, axis=0) / self.N
         self.r_var = (1 - self.momentum) * self.var_x + self.momentum * self.r_var
         if self.train: 
-            output = np.multiply(np.multiply((input_ - self.e_x), 1/np.sqrt(self.var_x + self.eps)), self.gamma) + self.beta
+            output = ((input_ - self.e_x) / np.sqrt(self.var_x + self.eps)) * self.gamma + self.beta 
         else: 
-            output = np.multiply(np.multiply((input_ - self.r_mean), 1/np.sqrt(self.r_var + self.eps)), self.gamma) + self.beta
+            output = ((input_ - self.r_mean) / np.sqrt(self.r_var + self.eps)) * self.gamma + self.beta 
         return output
 
     '''
@@ -163,11 +163,25 @@ class BatchNorm1d(object):
     def backward(self, grad_output):
         e = self.e_x if self.train else self.r_mean
         v = self.var_x if self.train else self.r_var
-        input_coef = ((1 - self.e_x) / sqrt(self.var_x + self.eps)) * self.gamma 
+
+        grad_beta = np.sum(grad_output, axis=0)
+        grad_gama = np.sum()
+
+
+
+
+
+
+
+        input_coef = ((1 - e) / np.sqrt(v + self.eps)) * self.gamma 
         grad_input = np.dot(grad_output, input_coef.T)
-        gamma_coef = (self.input - self.e_x) / sqrt(self.var_x + self.eps)
+        gamma_coef = (self.input - e) / np.sqrt(v + self.eps)
         grad_gamma = np.dot(grad_output, gamma_coef.T)
-        grad_beta = 1 
+        # print('shape of grad input')
+        # print(np.shape(grad_input))
+        # print('shape of grad gamma')
+        # print(np.shape(grad_gamma))
+        grad_beta = np.ones(self.input_channel)
         return grad_input, grad_gamma, grad_beta
 '''
     ReLU
