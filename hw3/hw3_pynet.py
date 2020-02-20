@@ -132,21 +132,15 @@ class BatchNorm1d(object):
     '''
     def forward(self, input_, train):
         self.N = input_.shape[0]
+        self.m = input_.shape[1]
         self.train = train 
         self.input = input_
         self.e_x = np.sum(input_, axis=0) / self.N
         self.r_mean = (1 - self.momentum) * self.e_x + self.momentum * self.r_mean 
-        self.var_x = np.sum((input_ - self.r_mean)**2, axis=0) / self.N 
+        self.var_x = np.sum((input_ - self.r_mean)**2, axis=0) / self.N
         self.r_var = (1 - self.momentum) * self.var_x + self.momentum * self.r_var
         if self.train: 
-            #print(np.shape(self.var_x))
-            #print(np.shape(self.r_var))
-            #print(np.shape(1/np.sqrt(self.var_x + self.eps)))
-            #print(np.shape((input_ - self.e_x)))
-            #print(np.shape(self.gamma))
-            #print(np.shape(self.beta))
             print(np.shape(np.multiply((input_ - self.e_x), 1/np.sqrt(self.var_x + self.eps))))
-            print(np.shape((np.multiply((input_ - self.r_mean), 1/np.sqrt(self.r_var + self.eps)), self.gamma)))
             output = np.dot(np.multiply((input_ - self.e_x), 1/np.sqrt(self.var_x + self.eps)), self.gamma) + self.beta
         else: 
             output = np.dot(np.multiply((input_ - self.r_mean), 1/np.sqrt(self.r_var + self.eps)), self.gamma) + self.beta
