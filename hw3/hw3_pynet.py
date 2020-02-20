@@ -93,7 +93,7 @@ class Linear(object):
     Thus, we instead use running_mean and running_var to perform normalization.
     The forward formular is modified to:
 
-        Y = ((X - running_mean) /  sqrt(running_var + eps)) * gamma + beta
+        Y = ((X - running_mean) /  sqrt(running_var + eps)) * gamma + beta           
 
     Overall, BN maintains 4 learnable parameters with shape of (input_channel),
     running_mean, running_var, beta, and gamma.  In this assignment, you need
@@ -140,10 +140,9 @@ class BatchNorm1d(object):
         self.var_x = np.sum((input_ - self.r_mean)**2, axis=0) / self.N
         self.r_var = (1 - self.momentum) * self.var_x + self.momentum * self.r_var
         if self.train: 
-            print(np.shape(np.multiply((input_ - self.e_x), 1/np.sqrt(self.var_x + self.eps))))
-            output = np.dot(np.multiply((input_ - self.e_x), 1/np.sqrt(self.var_x + self.eps)), self.gamma) + self.beta
+            output = np.multiply(np.multiply((input_ - self.e_x), 1/np.sqrt(self.var_x + self.eps)), self.gamma) + self.beta
         else: 
-            output = np.dot(np.multiply((input_ - self.r_mean), 1/np.sqrt(self.r_var + self.eps)), self.gamma) + self.beta
+            output = np.multiply(np.multiply((input_ - self.r_mean), 1/np.sqrt(self.r_var + self.eps)), self.gamma) + self.beta
         return output
 
     '''
