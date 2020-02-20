@@ -133,6 +133,7 @@ class BatchNorm1d(object):
     '''
     def forward(self, input_, train):
         self.train = train 
+        self.input = input_
         self.e_x = np.sum(input_, axis=0) / self.N
         self.r_mean = (1 - self.momentum) * self.e_x + self.momentum * self.r_mean 
         self.var_x = (input_ - self.r_mean)**2 / self.N 
@@ -159,9 +160,14 @@ class BatchNorm1d(object):
             grad_beta  -- numpy array of shape (input_channel), gradient w.r.t beta
     '''
     def backward(self, grad_output):
-        grad_input = 
+        e = self.e_x if self.train else self.r_mean
+        v = self.var_x if self.train else self.r_var
+        input_coef = ((1 - self.e_x) / sqrt(self.var_x + self.eps)) * self.gamma 
+        grad_input = np.dot(grad_output, input_coef.T)
+        gamma_coef = (self.input - self.e_x) / sqrt(self.var_x + self.eps)
+        grad_gamma = np.dot(grad_output, gamma_coef.T)
+        grad_beta = 1 
         return grad_input, grad_gamma, grad_beta
-
 '''
     ReLU
 
