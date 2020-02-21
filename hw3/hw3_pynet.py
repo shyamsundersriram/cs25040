@@ -469,11 +469,11 @@ class Conv2d(object):
     def forward(self, input_):
         (C_out, C_in, kernel_h, kernel_w) = np.shape(self.weight)
         (N, C_in, H, W) = np.shape(input_)
-        img = im2col(input_)
+        img = im2col(input_, kernel_h, kernel_w, self.stride, self.padding)
         weight = self.weight 
-        (N, junk, out_h, out_w) = np.shape(im2col(img)) 
-        img = np.reshape(N, 1, junk, out_h, out_w)
-        weight = np.reshape(1, C_out, junk, 1, 1)
+        (N, junk, out_h, out_w) = np.shape(img) 
+        img = img.reshape(N, 1, junk, out_h, out_w)
+        weight = weight.reshape(1, C_out, junk, 1, 1)
         output = img * weight 
         output = np.sum(output, axis=2)
         return output
