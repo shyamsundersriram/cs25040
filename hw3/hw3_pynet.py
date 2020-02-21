@@ -354,8 +354,18 @@ class CrossEntropyLossWithSoftmax(object):
         output_data -- numpy array of shape (N, (C * kernel_h * kernel_w), out_H, out_W)
 '''
 def im2col(input_data, kernel_h, kernel_w, stride, padding):
-    
-    return output_data
+    N, C, H, W = np.shape(input_data)
+    out_H = floor((H - kernel_h) / stride + 1 + padding) 
+    out_W = floor((W - kernel_w) / stride + 1 + padding) 
+    image = np.pad(input_data, [(0, 0), (0, 0), (padding, padding), (padding, padding)])
+    output = np.zeros((N, C, kernel_h, kernel_w, out_H, out_W))
+    for x in range(kernel_h): 
+        x_bound = x + stride * out_W
+        for y in range(kernel_w):
+            y_bound = y + stride * out_W
+            output[:, :, x, y, :, :] = image[:, :, x:x_bound:stride, y:y_bound:stride]
+    output_data = output.reshape(N, C*kernel_h * kernel_w, out_H, out_W)
+    return output_data 
 
 '''
     col2im (3 points)
@@ -386,9 +396,7 @@ def im2col(input_data, kernel_h, kernel_w, stride, padding):
         output_data -- output_array with shape (N, C, H, W)
 '''
 def col2im(input_data, kernel_h, kernel_w, stride=1, padding=0):
-    ########################
-    # TODO: YOUR CODE HERE #
-    ########################
+
     return output_data
 
 '''
