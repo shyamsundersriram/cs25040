@@ -367,6 +367,15 @@ def im2col(input_data, kernel_h, kernel_w, stride, padding):
     output_data = output.reshape(N, C*kernel_h * kernel_w, out_H, out_W)
     return output_data 
 
+def test_im2col(): 
+    input_data = np.array([[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12], [13, 14, 15, 16]])
+    input_data = np.array([[input_data]])
+    kernel_h = 3 
+    kernel_w = 3 
+    stride = 1 
+    padding = 1 
+    return im2col(input_data, kernel_h, kernel_w, stride, padding)
+
 '''
     col2im (3 points)
 
