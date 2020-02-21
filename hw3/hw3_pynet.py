@@ -258,15 +258,15 @@ class ReLU(object):
     cancel out.  This way, we also avoid some precision loss due to floating
     point numerical computation.
 
-    If we ignore the index on batch size and assume there is only one grouth
+    If we ignore the index on batch size and assume there is only one ground
     truth per sample, the formula for softmax and cross entropy loss are:
 
-        Softmax: prob[i] = exp(x[i]) / \sum_{j}exp(x[j])
+        Softmax: prob[i] = exp(x[i]) / sum_{j}exp(x[j])
         Cross_entropy_loss:  - 1 * log(prob[gt_class])
 
     Combining these two functions togther, we have:
 
-        cross_entropy_with_softmax: -x[gt_class] + log(\sum_{j}exp(x[j]))
+        cross_entropy_with_softmax: -x[gt_class] + log(sum_{j}exp(x[j]))
 
     In this assignment, you will implement both forward and backward
     computation.
@@ -275,13 +275,15 @@ class ReLU(object):
         None
 '''
 class CrossEntropyLossWithSoftmax(object):
+    
     def __init__(self):
         pass
+        
 
     '''
         Forward computation of cross entropy with softmax. (3 points)
 
-        Tou may want to save some intermediate variables to class membership
+        You may want to save some intermediate variables to class membership
         (self.)
 
         Arguments:
@@ -291,16 +293,22 @@ class CrossEntropyLossWithSoftmax(object):
         Output:
             output   -- numpy array of shape (N), containing the cross entropy loss on each input
     '''
-    def forward(self, input, gt_label):
-        ########################
-        # TODO: YOUR CODE HERE #
-        ########################
+    def forward(self, input_, gt_label):
+        #Softmax 
+        exp_input = np.exp(input_ - np.max(input_)) #should i do sum inputs? 
+        sum_input = np.sum(exp_input, axis=1)
+        softmax = (exp_input.T / sum_input).T
+
+        #Cross entropy loss 
+        m = gt_label.shape[0]
+        output = -np.log(softmax[range(m), gt_label])
+        self.stored = (m, softmax, sum_input, exp_input)
         return output
 
     '''
         Backward computation of cross entropy with softmax. (3 points)
 
-        It is recommended to resue the variable(s) in forward computation
+        It is recommended to reuse the variable(s) in forward computation
         in order to simplify the formula.
 
         Arguments:
@@ -309,11 +317,13 @@ class CrossEntropyLossWithSoftmax(object):
         Output:
             output   -- numpy array of shape (N, C), the gradient w.r.t input of forward function
     '''
+
     def backward(self, grad_output):
         ########################
         # TODO: YOUR CODE HERE #
         ########################
-        return grad_input
+        pass
+        #return grad_input
 
 '''
     im2col (3 points)
