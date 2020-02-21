@@ -133,16 +133,29 @@ class BatchNorm1d(object):
     def forward(self, input_, train):
         self.N = input_.shape[0]
         self.input_channel = input_.shape[1]
-        self.train = train 
-        self.input = input_
-        self.e_x = np.sum(input_, axis=0) / self.N
-        self.r_mean = (1 - self.momentum) * self.e_x + self.momentum * self.r_mean 
-        self.var_x = np.sum((input_ - self.e_x)**2, axis=0) / self.N
-        self.r_var = (1 - self.momentum) * self.var_x + self.momentum * self.r_var
-        if self.train: 
-            output = ((input_ - self.e_x) / np.sqrt(self.var_x + self.eps)) * self.gamma + self.beta 
-        else: 
-            output = ((input_ - self.r_mean) / np.sqrt(self.r_var + self.eps)) * self.gamma + self.beta 
+        self.train = train
+
+        # expectation 
+        ex = np.sum(input_, axis=0) / self.N
+        self.r_mean = (1 - self.momentum) * ex + self.momentum * self.r_mean 
+
+        #inverse sigma 
+        xex = input_ - ex  
+        xexsq = xex ** 2 
+        var = np.sum(xexsq, axis=0) / self.N 
+        self.r_var = (1 - self.momentum) * var + self.momentum * self.r_var
+        sd = np.sqrt(var + self.eps)
+        isd = 1. / sd 
+
+        x =  xex * isd 
+        gammax = self.gamma * x
+        output = gammax + self.beta 
+
+        e = ex if self.train else self.r_mean
+        v = var if self.train else self.r_var
+
+        #output = ((input_ - e) / np.sqrt(v + self.eps)) * self.gamma + self.beta 
+        self.stored = (x, ex, xex, isd, sd, var) #stored variables for backprop 
         return output
 
     '''
@@ -161,11 +174,36 @@ class BatchNorm1d(object):
             grad_beta  -- numpy array of shape (input_channel), gradient w.r.t beta
     '''
     def backward(self, grad_output):
-        e = self.e_x if self.train else self.r_mean
-        v = self.var_x if self.train else self.r_var
+        (x, ex, xex, isd, sd, var) = self.stored 
+        e = ex if self.train else self.r_mean
+        v = var if self.train else self.r_var
+        grad_beta = np.sum(grad_output, axis=0) 
+        grad_gammax = grad_output 
+        grad_gamma = np.sum(grad_output * x, axis=0)
+        grad_x = grad_output * self.gamma 
+        grad_isd = np.sum(grad_x * xex, axis=0)
+        grad_xex1 = grad_x * isd
+        grad_sd = -1. / (isd**2)
+        grad_var = 0.5 * 1 / np.sqrt(var + self.eps) * grad_sd 
+        grad_xexsq = 1. / self.N * np.ones((self.N, self.input_channel)) * grad_sd 
+        grad_xex2 = 2 * xex * grad_xexsq 
+        grad_x1 = grad_xex1 + grad_xex2 
+        grad_ex = -1 * np.sum(grad_x1, axis=0)
+        grad_x2 = 1. / self.N * np.ones((self.N, self.input_channel)) * grad_ex 
+        grad_input = grad_x1 + grad_x2 
+        return grad_input, grad_gamma, grad_beta 
 
-        grad_beta = np.sum(grad_output, axis=0)
-        grad_gama = np.sum()
+
+
+
+
+
+
+
+
+
+
+
 
 
 
