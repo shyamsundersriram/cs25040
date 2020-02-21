@@ -192,35 +192,6 @@ class BatchNorm1d(object):
         grad_x2 = 1. / self.N * np.ones((self.N, self.input_channel)) * grad_ex 
         grad_input = grad_x1 + grad_x2 
         return grad_input, grad_gamma, grad_beta 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        input_coef = ((1 - e) / np.sqrt(v + self.eps)) * self.gamma 
-        grad_input = np.dot(grad_output, input_coef.T)
-        gamma_coef = (self.input - e) / np.sqrt(v + self.eps)
-        grad_gamma = np.dot(grad_output, gamma_coef.T)
-        # print('shape of grad input')
-        # print(np.shape(grad_input))
-        # print('shape of grad gamma')
-        # print(np.shape(grad_gamma))
-        grad_beta = np.ones(self.input_channel)
-        return grad_input, grad_gamma, grad_beta
 '''
     ReLU
 
