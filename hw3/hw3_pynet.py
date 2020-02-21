@@ -301,8 +301,9 @@ class CrossEntropyLossWithSoftmax(object):
 
         #Cross entropy loss 
         m = gt_label.shape[0]
-        output = -np.log(softmax[range(m), gt_label])
-        self.stored = (m, softmax, sum_input, exp_input)
+        selected = softmax[range(m), gt_label]
+        output = -np.log(selected)
+        self.stored = (softmax, gt_label)
         return output
 
     '''
@@ -318,12 +319,13 @@ class CrossEntropyLossWithSoftmax(object):
             output   -- numpy array of shape (N, C), the gradient w.r.t input of forward function
     '''
 
-    def backward(self, grad_output):
-        ########################
-        # TODO: YOUR CODE HERE #
-        ########################
-        pass
-        #return grad_input
+    def backward(self, grad_output): #office hours. 
+
+        (softmax, gt_label) = self.stored 
+        max_val = np.max(gt_label) + 1 
+        one_hot = np.eye(max_val)[gt_label]
+        grad_input = softmax - one_hot
+        return grad_input
 
 '''
     im2col (3 points)
@@ -333,7 +335,7 @@ class CrossEntropyLossWithSoftmax(object):
         C is the channel dimension, and
         H, W are the spatial dimensions.
 
-    The im2col functions flattens each slidding kernel-sized block
+    The im2col functions flattens each sliding kernel-sized block
     (C * kernel_h * kernel_w) on each sptial location, so that the output has
     the shape of (N, (C * kernel_h * kernel_w), out_H, out_W) and we can thus
     formuate the convolutional operation as matrix multiplication.
@@ -352,9 +354,7 @@ class CrossEntropyLossWithSoftmax(object):
         output_data -- numpy array of shape (N, (C * kernel_h * kernel_w), out_H, out_W)
 '''
 def im2col(input_data, kernel_h, kernel_w, stride, padding):
-    ########################
-    # TODO: YOUR CODE HERE #
-    ########################
+    
     return output_data
 
 '''
