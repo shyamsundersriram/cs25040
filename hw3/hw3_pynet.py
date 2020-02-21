@@ -197,7 +197,7 @@ class BatchNorm1d(object):
 
     Implementation of ReLU (rectified linear unit) layer.  ReLU is the
     non-linear activation function that sets all negative values to zero.
-    The formua is: y = max(x,0).
+    The formula is: y = max(x,0).
 
     This layer has no learnable parameters and you need to implement both
     forward and backward computation.
@@ -221,10 +221,11 @@ class ReLU(object):
         Output:
             output -- numpy array having the same shape as input.
     '''
-    def forward(self, input):
-        ########################
-        # TODO: YOUR CODE HERE #
-        ########################
+    def forward(self, input_):
+        self.input = input_ 
+        output = input_
+        output[output < 0] = 0 
+        self.output = output 
         return output
 
     '''
@@ -239,9 +240,9 @@ class ReLU(object):
             grad_input  -- numpy array has the same shape as grad_output. gradient w.r.t input
     '''
     def backward(self, grad_output):
-        ########################
-        # TODO: YOUR CODE HERE #
-        ########################
+        relu_input = self.input 
+        grad_input = grad_output
+        grad_input[grad_input < 0] = 0 
         return grad_input
 
 '''
