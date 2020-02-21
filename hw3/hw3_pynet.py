@@ -474,7 +474,8 @@ class Conv2d(object):
         (N, junk, out_h, out_w) = np.shape(img) 
         img = img.reshape(N, 1, junk, out_h, out_w)
         weight = weight.reshape(1, C_out, junk, 1, 1)
-        output = img * weight 
+        bias = self.bias.reshape(1, C_out, 1, 1, 1)
+        output = img * weight + bias 
         output = np.sum(output, axis=2)
         return output
 
