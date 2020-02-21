@@ -466,10 +466,16 @@ class Conv2d(object):
         Ouput:
             output  -- numpy array of shape (N, output_chanel, out_H, out_W)
     '''
-    def forward(self, input):
-        ########################
-        # TODO: YOUR CODE HERE #
-        ########################
+    def forward(self, input_):
+        (C_out, C_in, kernel_h, kernel_w) = np.shape(self.weight)
+        (N, C_in, H, W) = np.shape(input_)
+        img = im2col(input_)
+        weight = self.weight 
+        (N, junk, out_h, out_w) = np.shape(im2col(img)) 
+        img = np.reshape(N, 1, junk, out_h, out_w)
+        weight = np.reshape(1, C_out, junk, 1, 1)
+        output = img * weight 
+        output = np.sum(output, axis=2)
         return output
 
     '''
