@@ -360,11 +360,11 @@ def im2col(input_data, kernel_h, kernel_w, stride, padding):
     image = np.pad(input_data, [(0, 0), (0, 0), (padding, padding), (padding, padding)])
     output = np.zeros((N, C, kernel_h, kernel_w, out_H, out_W))
     for x in range(kernel_h): 
-        x_bound = x + stride * out_W
+        x_bound = x + stride * out_W 
         for y in range(kernel_w):
-            y_bound = y + stride * out_W
+            y_bound = y + stride * out_W 
             output[:, :, x, y, :, :] = image[:, :, x:x_bound:stride, y:y_bound:stride]
-    output_data = output.reshape(N, C*kernel_h * kernel_w, out_H, out_W)
+    output_data = output.reshape(N, C *kernel_h * kernel_w, out_H, out_W)
     return output_data 
 
 def test_im2col(): 
@@ -407,7 +407,7 @@ def test_im2col():
 def col2im(input_data, kernel_h, kernel_w, stride=1, padding=0):
 
     (N, junk, out_H, out_W) = np.shape(input_data)
-    C = floor(junk / (kernel_h * kernel_w)) 
+    C = int(junk / (kernel_h * kernel_w)) 
     H = floor((out_H - 1) * stride - 2 * padding + kernel_h) 
     W = floor((out_W - 1) * stride - 2 * padding + kernel_w) 
     input_data = input_data.reshape((N, C, kernel_h, kernel_w, out_H, out_W))
@@ -492,7 +492,10 @@ class Conv2d(object):
             output  -- numpy array of shape (N, output_chanel, out_H, out_W)
     '''
     def forward(self, input_):
+        self.input = input_
         (C_out, C_in, kernel_h, kernel_w) = np.shape(self.weight)
+        self.kernel_h = kernel_h
+        self.kernel_w = kernel_w
         (N, C_in, H, W) = np.shape(input_)
         img = im2col(input_, kernel_h, kernel_w, self.stride, self.padding)
         weight = self.weight 
@@ -519,7 +522,18 @@ class Conv2d(object):
     '''
 
     def backward(self, grad_output):
+        (N, C_out, out_H, out_W) = np.shape(grad_output) 
+        (C_out, C_in, kernel_h, kernel_w) = np.shape(self.weight)
+        grad_output = grad_output.reshape(N, C_out, 1, out_H, out_W)
+        weight = self.weight.reshape(1, C_out, C_in * kernel_h * kernel_w, 1, 1) 
+        ow = grad_output * weight 
+        ow = np.sum(ow, axis=1)
+        grad_input = col2im(ow, self.kernel_h, self.kernel_w, self.stride, self.padding) 
 
+        
+        
+        grad_weight = self.input * grad_output 
+        grad_bias = np.ones(self.output_channel) * grad_output 
         return grad_input, grad_weight, grad_bias
 
 '''
