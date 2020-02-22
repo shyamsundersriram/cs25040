@@ -94,7 +94,6 @@ else:
 print_every = 100
 print('using device:', device)
 best_acc = 0
-
 '''
 Training (6 points)
 Train a model on CIFAR-10 using the PyTorch Module API.
@@ -108,12 +107,10 @@ Returns: Nothing, but prints model accuracies during training.
 '''
 def train(model, optimizer, epochs=1):
     model = model.to(device=device)  # move the model parameters to CPU/GPU 
-    model.train()
-    loss_fn = nn.MSELoss()
+    #model.train()
+    loss_fn = nn.CrossEntropyLoss() 
     for e in range(epochs):
         for t, (x, y) in enumerate(loader_train):
-            print(y)
-            print(len(y))
             # (1) put model to training mode
             # (2) move data to device, e.g. CPU or GPU
             # (3) forward and get loss
@@ -126,17 +123,16 @@ def train(model, optimizer, epochs=1):
             ##########################################################################
             optimizer.zero_grad()
             output = model(x)
-            print('this is size of output')
-            print(output.shape)
-            loss = loss_fn(output, y.view(1, -1).float())
+            loss = loss_fn(output, y)
             loss.backward() 
             optimizer.step() 
             ##########################################################################
             if t % print_every == 0:
                 print('Epoch %d, Iteration %d, loss = %.4f' % (e, t, loss.item()))
                 test(loader_val, model)
-                print()
-    model.eval() 
+    PATH = './cifar_10trained.pth'
+    torch.save(model.state_dict(), PATH)
+    #model.eval() 
 '''
 Testing (6 points)
 Test a model on CIFAR-10 using the PyTorch Module API.
@@ -154,36 +150,30 @@ def test(loader, model):
     else:
         print('Checking accuracy on test set')
     num_correct = 0
-    num_samples = 1 # change back to 0
+    total = 0 
+    correct = 0 
     model.eval()  # set model to evaluation mode
     with torch.no_grad():
-        for x, y in loader:
-            
+        for t, (x, y) in enumerate(loader):
             ##########################################################################
             output = model(x) 
-            #print('this is argmax')
-            #m = output.argmax()
-            #d = torch.tensor(64)
-            #indices = torch.cat(((m / d).view(-1, 1), (m % d).view(-1, 1)), dim=1)
-            #print(indices)
-            #print('this is output')
-            #print(output)
-            #print('this is y')
-            #print(y)
+            output, y = output.to(device), y.to(device)
 
-
+            _, pred = torch.max(output.data, 1)
+            total += y.size(0) 
+            correct += pred.eq(y).sum().item()   
             # (1) move to device, e.g. CPU or GPU
             # (2) forward and calculate scores and predictions
             # (2) accumulate num_correct and num_samples
             ##########################################################################
-        acc = float(num_correct) / num_samples
+        acc = float(correct / total)
         if loader.dataset.train and acc > best_acc:
+            best_model = model.state_dict()
             ##########################################################################
-            # TODO: YOUR CODE HERE
             # (4)Save best model on validation set for final test
             ##########################################################################
             best_acc = acc
-        print('Got %d / %d correct (%.2f)' % (num_correct, num_samples, 100 * acc))
+        print('Got %d / %d correct (%.2f)' % (correct, total, 100 * acc))
 
 ##########################################################################
 # TODO: YOUR CODE HERE
@@ -223,6 +213,28 @@ Finish your model and optimizer below.
 '''
 
 class Net(nn.Module):
+    def __init__(self):
+        super(Net, self).__init__()
+        self.conv1 = nn.Conv2d(3, 6, 5)
+        self.pool = nn.MaxPool2d(2, 2)
+        self.conv2 = nn.Conv2d(6, 16, 5)
+        self.fc1 = nn.Linear(16 * 5 * 5, 120)
+        self.fc2 = nn.Linear(120, 84)
+        self.fc3 = nn.Linear(84, 10)
+
+    def forward(self, x):
+        x = self.pool(F.relu(self.conv1(x)))
+        x = self.pool(F.relu(self.conv2(x)))
+        x = x.view(-1, 16 * 5 * 5)
+        x = F.relu(self.fc1(x))
+        x = F.relu(self.fc2(x))
+        x = self.fc3(x)
+        return x
+
+
+
+
+class badNet(nn.Module):
     def __init__(self): 
         super(Net, self).__init__()
         self.conv1 = nn.Conv2d(3, 32, 3, 1)
@@ -264,10 +276,8 @@ optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
 train(model, optimizer, epochs=10)
 
 ##########################################################################
-# TODO: YOUR CODE HERE
-test(loader_train, best_model)
 
 # load saved model to best_model for final testing
-best_model = None
+best_model = torch.load(model.state_dict(), PATH)
 ##########################################################################
 test(loader_test, best_model)
