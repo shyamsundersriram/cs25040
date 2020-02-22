@@ -407,16 +407,16 @@ def test_im2col():
 def col2im(input_data, kernel_h, kernel_w, stride=1, padding=0):
 
     (N, junk, out_H, out_W) = np.shape(input_data)
-    C = int(junk / (kernel_h * kernel_w)) 
+    C = floor(junk / (kernel_h * kernel_w)) 
     H = floor((out_H - 1) * stride - 2 * padding + kernel_h) 
     W = floor((out_W - 1) * stride - 2 * padding + kernel_w) 
     input_data = input_data.reshape((N, C, kernel_h, kernel_w, out_H, out_W))
     output = np.zeros((N, C, H, W))
-    image = np.pad(output, [(0, 0), (0, 0), (padding, padding), (padding, padding)])
-    for x in range (kernel_h): 
-        x_bound = x + stride * out_W
+    image = np.pad(output, [(0, 0), (0, 0), (padding, padding), (padding, padding)], mode='constant')
+    for x in range(kernel_h): 
+        x_bound = x + stride * out_W 
         for y in range(kernel_w):
-            y_bound = y + stride * out_W
+            y_bound = y + stride * out_W 
             image[:, :, x:x_bound:stride, y:y_bound:stride] = input_data[:, :, x, y, :, :]
     output_data = np.copy(image[:, :, padding:(H + padding), padding:(W + padding)])
     return output_data 
@@ -426,13 +426,12 @@ def test_col2im():
     kernel_w = 3 
     stride = 1 
     padding = 1
-    im = np.array([[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12], [13, 14, 15, 16]]) 
-    im = np.array([[im]])
+    #im = np.random.rand(16, 3, 256, 256)
+    im = np.array([[[[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12], [13, 14, 15, 16]]]])
     col = im2col(im, kernel_h, kernel_w, stride, padding)
     im2 = col2im(col, kernel_h, kernel_w, stride, padding)
+    print(np.array_equal(im, im2))
     return im, im2
-
-
 '''
     Conv2d
 
@@ -528,14 +527,13 @@ class Conv2d(object):
         weight = self.weight.reshape(1, C_out, C_in * kernel_h * kernel_w, 1, 1) 
         ow = grad_output * weight 
         ow = np.sum(ow, axis=1)
-        grad_input = col2im(ow, self.kernel_h, self.kernel_w, self.stride, self.padding) 
+        grad_input = col2im(ow, kernel_h, kernel_w, self.stride, self.padding) 
 
         t_input = im2col(self.input, self.kernel_h, self.kernel_w, self.stride, self.padding)
         t_input = t_input.reshape(1, C_in, self.kernel_h, self.kernel_w, N * out_H * out_W)
         t_grad_output = grad_output.reshape(C_out, 1, 1, 1, N * out_H * out_W)
         grad_weight = t_input * t_grad_output 
         grad_weight = np.sum(grad_weight, axis=4)
-        print('grad_weight done')
 
         grad_bias = grad_output.reshape(C_out, N * out_H * out_W)
         grad_bias = np.sum(grad_bias, axis=1)
