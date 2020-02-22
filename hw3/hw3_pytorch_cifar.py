@@ -109,8 +109,11 @@ Returns: Nothing, but prints model accuracies during training.
 def train(model, optimizer, epochs=1):
     model = model.to(device=device)  # move the model parameters to CPU/GPU 
     model.train()
+    loss_fn = nn.MSELoss()
     for e in range(epochs):
         for t, (x, y) in enumerate(loader_train):
+            print(y)
+            print(len(y))
             # (1) put model to training mode
             # (2) move data to device, e.g. CPU or GPU
             # (3) forward and get loss
@@ -123,7 +126,9 @@ def train(model, optimizer, epochs=1):
             ##########################################################################
             optimizer.zero_grad()
             output = model(x)
-            loss = loss_fn(output, y)
+            print('this is size of output')
+            print(output.shape)
+            loss = loss_fn(output, y.view(1, -1).float())
             loss.backward() 
             optimizer.step() 
             ##########################################################################
@@ -149,13 +154,24 @@ def test(loader, model):
     else:
         print('Checking accuracy on test set')
     num_correct = 0
-    num_samples = 0
+    num_samples = 1 # change back to 0
     model.eval()  # set model to evaluation mode
     with torch.no_grad():
         for x, y in loader:
-            pass
+            
             ##########################################################################
-            # TODO: YOUR CODE HERE
+            output = model(x) 
+            #print('this is argmax')
+            #m = output.argmax()
+            #d = torch.tensor(64)
+            #indices = torch.cat(((m / d).view(-1, 1), (m % d).view(-1, 1)), dim=1)
+            #print(indices)
+            #print('this is output')
+            #print(output)
+            #print('this is y')
+            #print(y)
+
+
             # (1) move to device, e.g. CPU or GPU
             # (2) forward and calculate scores and predictions
             # (2) accumulate num_correct and num_samples
@@ -209,16 +225,16 @@ Finish your model and optimizer below.
 class Net(nn.Module):
     def __init__(self): 
         super(Net, self).__init__()
-        self.conv1 = nn.Conv2d(1, 32, 3, 1)
+        self.conv1 = nn.Conv2d(3, 32, 3, 1)
         self.conv1_bn = nn.BatchNorm2d(32)
-        self.conv2 = nn.Conv2d(32, 64, 3, 1)
-        self.conv2_bn = nn.BatchNorm2d(64)
-        self.conv3 = nn.Conv2d(64, 128, 3, 1)
+        self.conv2 = nn.Conv2d(32, 32, 3, 1)
+        self.conv2_bn = nn.BatchNorm2d(32)
+        self.conv3 = nn.Conv2d(32, 128, 3, 1)
         self.conv3_bn = nn.BatchNorm2d(128)
         self.dropout1 = nn.Dropout2d(0.25)
         self.dropout2 = nn.Dropout2d(0.5)
-        self.fc1 = nn.Linear(9216, 128)
-        self.fc2 = nn.Linear(128, 10)
+        self.fc1 = nn.Linear(21632, 1024)
+        self.fc2 = nn.Linear(1024, 64)
 
     def forward(self, x): 
         x = self.conv1(x)
@@ -229,10 +245,11 @@ class Net(nn.Module):
         x = F.relu(x)
         x = self.conv3(x)
         x = self.conv3_bn(x)
+        x = F.relu(x)
         x = F.max_pool2d(x, 2)
         x = self.dropout1(x)
         x = torch.flatten(x, 1)
-        x = self.f1(x)
+        x = self.fc1(x)
         x = F.relu(x)
         x = self.dropout2(x)
         x = self.fc2(x)
@@ -248,7 +265,9 @@ train(model, optimizer, epochs=10)
 
 ##########################################################################
 # TODO: YOUR CODE HERE
+test(loader_train, best_model)
+
 # load saved model to best_model for final testing
-#best_model = None
+best_model = None
 ##########################################################################
-#test(loader_test, best_model)
+test(loader_test, best_model)
