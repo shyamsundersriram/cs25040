@@ -530,10 +530,15 @@ class Conv2d(object):
         ow = np.sum(ow, axis=1)
         grad_input = col2im(ow, self.kernel_h, self.kernel_w, self.stride, self.padding) 
 
-        
-        
-        grad_weight = self.input * grad_output 
-        grad_bias = np.ones(self.output_channel) * grad_output 
+        t_input = im2col(self.input, self.kernel_h, self.kernel_w, self.stride, self.padding)
+        t_input = t_input.reshape(1, C_in, self.kernel_h, self.kernel_w, N * out_H * out_W)
+        t_grad_output = grad_output.reshape(C_out, 1, 1, 1, N * out_H * out_W)
+        grad_weight = t_input * t_grad_output 
+        grad_weight = np.sum(grad_weight, axis=4)
+        print('grad_weight done')
+
+        grad_bias = grad_output.reshape(C_out, N * out_H * out_W)
+        grad_bias = np.sum(grad_output, axis=1)
         return grad_input, grad_weight, grad_bias
 
 '''
