@@ -354,9 +354,9 @@ class CrossEntropyLossWithSoftmax(object):
         output_data -- numpy array of shape (N, (C * kernel_h * kernel_w), out_H, out_W)
 '''
 def im2col(input_data, kernel_h, kernel_w, stride, padding):
-    N, C, H, W = np.shape(input_data)
-    out_H = floor((H - kernel_h) / stride + 1 + padding) 
-    out_W = floor((W - kernel_w) / stride + 1 + padding) 
+    (N, C, H, W) = np.shape(input_data)
+    out_H = floor((H - kernel_h + 2 * padding) / stride + 1) 
+    out_W = floor((W - kernel_w + 2 * padding) / stride + 1) 
     image = np.pad(input_data, [(0, 0), (0, 0), (padding, padding), (padding, padding)])
     output = np.zeros((N, C, kernel_h, kernel_w, out_H, out_W))
     for x in range(kernel_h): 
@@ -406,7 +406,32 @@ def test_im2col():
 '''
 def col2im(input_data, kernel_h, kernel_w, stride=1, padding=0):
 
-    return output_data
+    (N, junk, out_H, out_W) = np.shape(input_data)
+    C = floor(junk / (kernel_h * kernel_w)) 
+    H = floor((out_H - padding - 1) * stride + kernel_h)
+    W = floor((out_W - padding - 1) * stride + kernel_w)
+    input_data = input_data.reshape((N, C, kernel_h, kernel_w, out_H, out_W))
+    output = np.zeros((N, C, H, W))
+    image = np.pad(output, [(0, 0), (0, 0), (padding, padding), (padding, padding)])
+    for x in range (kernel_h): 
+        x_bound = x + stride * out_W
+        for y in range(kernel_w):
+            y_bound = y + stride * out_W
+            image[:, :, x:x_bound:stride, y:y_bound:stride] = input_data[:, :, x, y, :, :]
+    output_data = np.copy(image[:, :, padding:H, padding:W])
+    return output_data 
+
+def test_col2im(): 
+    kernel_h = 3 
+    kernel_w = 3 
+    stride = 1 
+    padding = 1
+    im = np.array([[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12], [13, 14, 15, 16]]) 
+    im = np.array([[im]])
+    col = im2col(im, kernel_h, kernel_w, stride, padding)
+    im2 = col2im(col, kernel_h, kernel_w, stride, padding)
+    return im, im2
+
 
 '''
     Conv2d
