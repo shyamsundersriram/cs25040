@@ -72,7 +72,7 @@ loader_val = DataLoader(cifar10_val, batch_size=64,
 cifar10_test = dset.CIFAR10('./cifar_data', train=False, download=True,
                             transform=transform)
 loader_test = DataLoader(cifar10_test, batch_size=64)
-
+PATH = './cifar_10trained.pth'
 '''
 Device specification (NO need to modify).
 You have an option to use GPU by setting the flag to True below.
@@ -130,7 +130,6 @@ def train(model, optimizer, epochs=1):
             if t % print_every == 0:
                 print('Epoch %d, Iteration %d, loss = %.4f' % (e, t, loss.item()))
                 test(loader_val, model)
-    PATH = './cifar_10trained.pth'
     torch.save(model.state_dict(), PATH)
     #model.eval() 
 '''
@@ -215,23 +214,35 @@ Finish your model and optimizer below.
 class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
-        self.conv1 = nn.Conv2d(3, 6, 5)
+        self.conv1 = nn.Conv2d(3, 9, 5)
+        self.conv1_bn = nn.BatchNorm2d(9)
+        self.dropout1 = nn.Dropout2d(0.25)
         self.pool = nn.MaxPool2d(2, 2)
-        self.conv2 = nn.Conv2d(6, 16, 5)
-        self.fc1 = nn.Linear(16 * 5 * 5, 120)
+        self.conv2 = nn.Conv2d(9, 32, 5)
+        self.conv2_bn = nn.BatchNorm2d(32)
+        #self.conv3 = nn.Conv2d(16, 32, 5)
+        #self.conv3_bn = nn.BatchNorm2d(32)
+        self.dropout2 = nn.Dropout2d(0.25)
+        self.fc1 = nn.Linear(32 * 5 * 5, 120)
         self.fc2 = nn.Linear(120, 84)
         self.fc3 = nn.Linear(84, 10)
 
     def forward(self, x):
-        x = self.pool(F.relu(self.conv1(x)))
-        x = self.pool(F.relu(self.conv2(x)))
-        x = x.view(-1, 16 * 5 * 5)
+        x = self.conv1(x)
+        x = self.conv1_bn(x)
+        x = self.dropout1(x)
+        x = self.pool(F.relu(x))
+        x = self.conv2(x)
+        x = self.conv2_bn(x)
+        x = self.dropout2(x)
+        #x = self.conv3(x)
+        #x = self.conv3_bn(x)
+        x = self.pool(F.relu(x))
+        x = x.view(-1, 32 * 5 * 5) 
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
-        x = self.fc3(x)
+        x = F.relu(self.fc3(x))
         return x
-
-
 
 
 class badNet(nn.Module):
@@ -278,6 +289,7 @@ train(model, optimizer, epochs=10)
 ##########################################################################
 
 # load saved model to best_model for final testing
-best_model = torch.load(model.state_dict(), PATH)
+best_model = Net() 
+best_model.load_state_dict(torch.load(PATH))
 ##########################################################################
 test(loader_test, best_model)
