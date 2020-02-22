@@ -538,7 +538,7 @@ class Conv2d(object):
         print('grad_weight done')
 
         grad_bias = grad_output.reshape(C_out, N * out_H * out_W)
-        grad_bias = np.sum(grad_output, axis=1)
+        grad_bias = np.sum(grad_bias, axis=1)
         return grad_input, grad_weight, grad_bias
 
 '''
