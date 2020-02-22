@@ -405,7 +405,6 @@ def test_im2col():
         output_data -- output_array with shape (N, C, H, W)
 '''
 def col2im(input_data, kernel_h, kernel_w, stride=1, padding=0):
-
     (N, junk, out_H, out_W) = np.shape(input_data)
     C = floor(junk / (kernel_h * kernel_w)) 
     H = floor((out_H - 1) * stride - 2 * padding + kernel_h) 
@@ -418,14 +417,15 @@ def col2im(input_data, kernel_h, kernel_w, stride=1, padding=0):
         for y in range(kernel_w):
             y_bound = y + stride * out_W 
             image[:, :, x:x_bound:stride, y:y_bound:stride] = input_data[:, :, x, y, :, :]
-    output_data = np.copy(image[:, :, padding:(H + padding), padding:(W + padding)])
+    output_data = np.copy(image[:, :, padding:(H + 2 * padding), padding:(W + 2 * padding)])
     return output_data 
 
 def test_col2im(): 
     kernel_h = 3 
     kernel_w = 3 
-    stride = 1 
-    padding = 1
+    stride = 2
+    padding = 2
+    print(padding)
     #im = np.random.rand(16, 3, 256, 256)
     im = np.array([[[[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12], [13, 14, 15, 16]]]])
     col = im2col(im, kernel_h, kernel_w, stride, padding)
