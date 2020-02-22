@@ -408,8 +408,8 @@ def col2im(input_data, kernel_h, kernel_w, stride=1, padding=0):
 
     (N, junk, out_H, out_W) = np.shape(input_data)
     C = floor(junk / (kernel_h * kernel_w)) 
-    H = floor((out_H - padding - 1) * stride + kernel_h)
-    W = floor((out_W - padding - 1) * stride + kernel_w)
+    H = floor((out_H - 1) * stride - 2 * padding + kernel_h) 
+    W = floor((out_W - 1) * stride - 2 * padding + kernel_w) 
     input_data = input_data.reshape((N, C, kernel_h, kernel_w, out_H, out_W))
     output = np.zeros((N, C, H, W))
     image = np.pad(output, [(0, 0), (0, 0), (padding, padding), (padding, padding)])
@@ -418,7 +418,7 @@ def col2im(input_data, kernel_h, kernel_w, stride=1, padding=0):
         for y in range(kernel_w):
             y_bound = y + stride * out_W
             image[:, :, x:x_bound:stride, y:y_bound:stride] = input_data[:, :, x, y, :, :]
-    output_data = np.copy(image[:, :, padding:H, padding:W])
+    output_data = np.copy(image[:, :, padding:(H + padding), padding:(W + padding)])
     return output_data 
 
 def test_col2im(): 
@@ -519,9 +519,7 @@ class Conv2d(object):
     '''
 
     def backward(self, grad_output):
-        ########################
-        # TODO: YOUR CODE HERE #
-        ########################
+
         return grad_input, grad_weight, grad_bias
 
 '''
