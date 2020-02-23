@@ -523,9 +523,10 @@ class Conv2d(object):
     def backward(self, grad_output):
         (N, C_out, out_H, out_W) = np.shape(grad_output) 
         (C_out, C_in, kernel_h, kernel_w) = np.shape(self.weight)
-        grad_output = grad_output.reshape(N, C_out, 1, out_H, out_W)
-        weight = self.weight.reshape(1, C_out, C_in * kernel_h * kernel_w, 1, 1) 
+        grad_output = grad_output.reshape(N, C_out, 1, 1, 1, out_H, out_W)
+        weight = self.weight.reshape(1, C_out, C_in, kernel_h, kernel_w, 1, 1) 
         ow = grad_output * weight 
+        ow = ow.reshape(N, C_out, C_in * kernel_h * kernel_w, out_H, out_W)
         ow = np.sum(ow, axis=1)
         grad_input = col2im(ow, kernel_h, kernel_w, self.stride, self.padding) 
 
@@ -582,12 +583,23 @@ class MaxPool2d(object):
         Ouput:
             output  -- numpy array of shape (N, input_channel, out_H, out_W)
     '''
-    def forward(self, input):
-        ########################
-        # TODO: YOUR CODE HERE #
-        ########################
+    def forward(self, input_):
+        self.input = input_
+        (N, C_in, H, W) = np.shape(input_)
+        out_H = floor((H - self.kernel_h + 2 * self.padding) / self.stride + 1) 
+        out_W = floor((W - self.kernel_w + 2 * self.padding) / self.stride + 1) 
+        output = np.zeros((N, C_in, out_H, out_W))
+        for i in range(N): 
+            for j in range(out_H): 
+                for k in range(out_W): 
+                    for m in range(C_in): 
+                        h_beg = j * self.stride 
+                        w_beg = k * self.stride 
+                        h_end = j * self.stride + self.kernel_h 
+                        w_end = k * self.stride + self.kernel_w 
+                        mini_input = input_[i, m, h_beg:h_end, w_beg:w_end]
+                        output[i, m, j, k] = np.max(mini_input)
         return output
-
     '''
         Backward computation of max pooling layer. (3 points)
 
@@ -601,6 +613,19 @@ class MaxPool2d(object):
     '''
     def backward(self, grad_output):
         ########################
-        # TODO: YOUR CODE HERE #
+        N, C_in, out_H, out_W = np.shape(grad_output)
+        grad_input = np.zeros(np.shape(self.input))
+        for i in range(N): 
+            vec = self.input[i]
+            for j in range(out_H): 
+                for k in range(out_W): 
+                    for m in range(C_in): 
+                        h_beg = j * self.stride 
+                        w_beg = k * self.stride 
+                        h_end = j * self.stride + self.kernel_h 
+                        w_end = k * self.stride + self.kernel_w 
+                        kernel_vec = vec[m, h_beg:h_end, w_beg:w_end]
+                        max_mat = np.multiply(kernel_vec == np.max(kernel_vec), grad_output[i,m,j,k])
+                        grad_input[i, m, h_beg:h_end, w_beg:w_end] += max_mat 
         ########################
         return grad_input
