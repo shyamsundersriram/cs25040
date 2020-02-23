@@ -297,13 +297,13 @@ class CrossEntropyLossWithSoftmax(object):
         #Softmax 
         exp_input = np.exp(input_ - np.max(input_)) #should i do sum inputs? 
         sum_input = np.sum(exp_input, axis=1)
-        softmax = (exp_input.T / sum_input).T
+        self.softmax = (exp_input.T / sum_input).T
 
         #Cross entropy loss 
         m = gt_label.shape[0]
-        selected = softmax[range(m), gt_label]
+        selected = self.softmax[range(m), gt_label]
         output = -np.log(selected)
-        self.stored = (softmax, gt_label)
+        self.gt_label = gt_label
         return output
 
     '''
@@ -319,12 +319,10 @@ class CrossEntropyLossWithSoftmax(object):
             output   -- numpy array of shape (N, C), the gradient w.r.t input of forward function
     '''
 
-    def backward(self, grad_output): #office hours. 
-
-        (softmax, gt_label) = self.stored 
-        max_val = np.max(gt_label) + 1 
-        one_hot = np.eye(max_val)[gt_label]
-        grad_input = softmax - one_hot
+    def backward(self, grad_output): #office hours.  
+        max_val = np.shape(self.softmax)
+        one_hot = np.eye(N=max_val[1], M=max_val[1])[self.gt_label]
+        grad_input = self.softmax - one_hot
         return grad_input
 
 '''
