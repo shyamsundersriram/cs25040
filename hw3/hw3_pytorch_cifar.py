@@ -210,20 +210,19 @@ optimizer = optim.SGD(model.parameters(), lr, momentum, weight_decay)
 **************************************************************************
 Finish your model and optimizer below.
 '''
-
 class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
-        self.conv1 = nn.Conv2d(3, 9, 5)
-        self.conv1_bn = nn.BatchNorm2d(9)
+        self.conv1 = nn.Conv2d(3, 32, 5)
+        self.conv1_bn = nn.BatchNorm2d(32)
         self.dropout1 = nn.Dropout2d(0.25)
         self.pool = nn.MaxPool2d(2, 2)
-        self.conv2 = nn.Conv2d(9, 32, 5)
-        self.conv2_bn = nn.BatchNorm2d(32)
-        #self.conv3 = nn.Conv2d(16, 32, 5)
-        #self.conv3_bn = nn.BatchNorm2d(32)
+        self.conv2 = nn.Conv2d(32, 80, 5)
+        self.conv2_bn = nn.BatchNorm2d(80)
+        self.conv3 = nn.Conv2d(80, 64, 5)
+        self.conv3_bn = nn.BatchNorm2d(64)
         self.dropout2 = nn.Dropout2d(0.25)
-        self.fc1 = nn.Linear(32 * 5 * 5, 120)
+        self.fc1 = nn.Linear(24 * 24, 120)
         self.fc2 = nn.Linear(120, 84)
         self.fc3 = nn.Linear(84, 10)
 
@@ -235,55 +234,20 @@ class Net(nn.Module):
         x = self.conv2(x)
         x = self.conv2_bn(x)
         x = self.dropout2(x)
-        #x = self.conv3(x)
-        #x = self.conv3_bn(x)
+        x = self.conv3(x)
+        x = self.conv3_bn(x)
         x = self.pool(F.relu(x))
-        x = x.view(-1, 32 * 5 * 5) 
+        x = x.view(-1, 24 * 24) 
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
         x = F.relu(self.fc3(x))
         return x
 
-
-class badNet(nn.Module):
-    def __init__(self): 
-        super(Net, self).__init__()
-        self.conv1 = nn.Conv2d(3, 32, 3, 1)
-        self.conv1_bn = nn.BatchNorm2d(32)
-        self.conv2 = nn.Conv2d(32, 32, 3, 1)
-        self.conv2_bn = nn.BatchNorm2d(32)
-        self.conv3 = nn.Conv2d(32, 128, 3, 1)
-        self.conv3_bn = nn.BatchNorm2d(128)
-        self.dropout1 = nn.Dropout2d(0.25)
-        self.dropout2 = nn.Dropout2d(0.5)
-        self.fc1 = nn.Linear(21632, 1024)
-        self.fc2 = nn.Linear(1024, 64)
-
-    def forward(self, x): 
-        x = self.conv1(x)
-        x = self.conv1_bn(x)
-        x = F.relu(x)
-        x = self.conv2(x)
-        x = self.conv2_bn(x)
-        x = F.relu(x)
-        x = self.conv3(x)
-        x = self.conv3_bn(x)
-        x = F.relu(x)
-        x = F.max_pool2d(x, 2)
-        x = self.dropout1(x)
-        x = torch.flatten(x, 1)
-        x = self.fc1(x)
-        x = F.relu(x)
-        x = self.dropout2(x)
-        x = self.fc2(x)
-        output = F.log_softmax(x, dim=1)
-        return output 
-
 ##########################################################################
 
 # You should get at least 70% accuracy
 model = Net() 
-optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
+optimizer = optim.SGD(model.parameters(), lr=0.02, momentum=0.9)
 train(model, optimizer, epochs=10)
 
 ##########################################################################
