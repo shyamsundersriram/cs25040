@@ -12,6 +12,8 @@ import numpy as np
 import os
 import math
 
+import matplotlib.pyplot as plt 
+
 '''
 In this section, you can experiment with a ConvNet architecture of your own
 design.  Here, it is your job to experiment with architectures, hyperparameters,
@@ -109,7 +111,10 @@ def train(model, optimizer, epochs=1):
     model = model.to(device=device)  # move the model parameters to CPU/GPU 
     #model.train()
     loss_fn = nn.CrossEntropyLoss() 
+    losses = [] 
+    accuracies = [] 
     for e in range(epochs):
+        epoch_loss = []
         for t, (x, y) in enumerate(loader_train):
             # (1) put model to training mode
             # (2) move data to device, e.g. CPU or GPU
@@ -126,12 +131,15 @@ def train(model, optimizer, epochs=1):
             loss = loss_fn(output, y)
             loss.backward() 
             optimizer.step() 
+            epoch_loss.append(loss.item())
             ##########################################################################
             if t % print_every == 0:
                 print('Epoch %d, Iteration %d, loss = %.4f' % (e, t, loss.item()))
-                test(loader_val, model)
+                best_acc = test(loader_val, model)
+                accuracies.append(best_acc)
+            losses.append(np.mean(epoch_loss))
     torch.save(model.state_dict(), PATH)
-    #model.eval() 
+    return losses, accuracies
 '''
 Testing (6 points)
 Test a model on CIFAR-10 using the PyTorch Module API.
@@ -151,6 +159,7 @@ def test(loader, model):
     num_correct = 0
     total = 0 
     correct = 0 
+    accuracies = [] 
     model.eval()  # set model to evaluation mode
     with torch.no_grad():
         for t, (x, y) in enumerate(loader):
@@ -166,6 +175,7 @@ def test(loader, model):
             # (2) accumulate num_correct and num_samples
             ##########################################################################
         acc = float(correct / total)
+        accuracies.append(acc)
         if loader.dataset.train and acc > best_acc:
             best_model = model.state_dict()
             ##########################################################################
@@ -173,6 +183,7 @@ def test(loader, model):
             ##########################################################################
             best_acc = acc
         print('Got %d / %d correct (%.2f)' % (correct, total, 100 * acc))
+        return best_acc
 
 ##########################################################################
 # TODO: YOUR CODE HERE
@@ -243,12 +254,16 @@ class Net(nn.Module):
         x = F.relu(self.fc3(x))
         return x
 
+'''
+This is the writeup for the pytorch implementation. 
+
+'''
 ##########################################################################
 
 # You should get at least 70% accuracy
 model = Net() 
 optimizer = optim.SGD(model.parameters(), lr=0.02, momentum=0.9)
-train(model, optimizer, epochs=10)
+losses, accuracies = train(model, optimizer, epochs=10)
 
 ##########################################################################
 
@@ -256,4 +271,8 @@ train(model, optimizer, epochs=10)
 best_model = Net() 
 best_model.load_state_dict(torch.load(PATH))
 ##########################################################################
-test(loader_test, best_model)
+test_accuracy = test(loader_test, best_model)
+plt.plot(np.arange(len(accuracies)), np.array(accuracies)) 
+plt.show() 
+plt.plot(np.arange(len(losses)), np.array(losses))
+plt.show() 

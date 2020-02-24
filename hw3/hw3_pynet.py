@@ -414,7 +414,7 @@ def col2im(input_data, kernel_h, kernel_w, stride=1, padding=0):
         x_bound = x + stride * out_W 
         for y in range(kernel_w):
             y_bound = y + stride * out_W 
-            image[:, :, x:x_bound:stride, y:y_bound:stride] = input_data[:, :, x, y, :, :]
+            image[:, :, x:x_bound:stride, y:y_bound:stride] += input_data[:, :, x, y, :, :]
     output_data = np.copy(image[:, :, padding:(H + 2 * padding), padding:(W + 2 * padding)])
     return output_data 
 
@@ -627,3 +627,5 @@ class MaxPool2d(object):
                         grad_input[i, m, h_beg:h_end, w_beg:w_end] += max_mat 
         ########################
         return grad_input
+
+
