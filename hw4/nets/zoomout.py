@@ -18,10 +18,11 @@ class Zoomout(nn.Module):
         # load the pre-trained ImageNet CNN and list out the layers
         self.vgg = models.vgg11(pretrained=True)
         self.feature_list = list(self.vgg.features.children())
-        self.feature0 = self.feature_list[1]
-        self.feature1 = self.feature_list[9]
-        self.feature2 = self.feature_list[14]
-        self.feature3 = self.feature_list[19]
+        self.feature0 = self.vgg.features[:2]
+        self.feature1 = self.vgg.features[:5]
+        self.feature2 = self.vgg.features[:10]
+        self.feature3 = self.vgg.features[:15]
+        self.feature4 = self.vgg.features[:20]
         """
         TODO:  load the correct layers to extract zoomout features.
         """
@@ -36,7 +37,8 @@ class Zoomout(nn.Module):
         activation1 = F.interpolate(self.feature1(x), (self.H, self.W))
         activation2 = F.interpolate(self.feature2(x), (self.H, self.W))
         activation3 = F.interpolate(self.feature3(x), (self.H, self.W))
-        self.activations = [activation0, activation1, activation2, activation3]
+        activation4 = F.interpolate(self.feature4(x), (self.H, self.W))
+        self.activations = [activation0, activation1, activation2, activation3, activation4]
         hypermat = torch.cat(self.activations, dim=1)
         return hypermat 
 
