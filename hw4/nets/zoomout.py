@@ -33,6 +33,8 @@ class Zoomout(nn.Module):
         Hint: use F.upsample_bilinear and then torch.cat.
         """
         _, _, self.H, self.W = x.shape
+        #self.H = self.H // 2
+        #self.W = self.W // 2
         activation0 = F.interpolate(self.feature0(x), (self.H, self.W))
         activation1 = F.interpolate(self.feature1(x), (self.H, self.W))
         activation2 = F.interpolate(self.feature2(x), (self.H, self.W))

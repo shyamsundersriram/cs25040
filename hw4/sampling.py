@@ -19,12 +19,18 @@ def extract_samples(zoomout, dataset):
             zoom_feats = zoomout(images.cpu().float().unsqueeze(0))
     """
     features = [] 
-    features_labels = []   
+    features_labels = []  
+    count = 0  
+    print("this is len dataset")
+    print(len(dataset))
     for image_idx in range(len(dataset)):
         images, labels = dataset[image_idx]
         max_label = torch.max(labels) #optimization of code 
         unique_label = torch.unique(labels)
         hw_samples = {} 
+        with torch.no_grad():
+            zoom_feats = zoomout.forward(images.cpu().float().unsqueeze(0))
+        zoom_feats = zoom_feats.reshape(-1, 224, 224)
         for label in unique_label:
             indices = torch.where(labels == label)
             size = list(indices[0].size())
@@ -33,25 +39,13 @@ def extract_samples(zoomout, dataset):
                 random_samples = random.sample(range(size[0]), 3) 
                 for randint in random_samples: 
                     hw_samples[label].append((indices[0][randint], indices[1][randint])) 
-        with torch.no_grad():
-            zoom_feats = zoomout.forward(images.cpu().float().unsqueeze(0))
-        zoom_feats = zoom_feats.reshape(-1, 224, 224)
-        print('this is zoom feats shape')
-        print(zoom_feats.shape)
         for new_label, final_indices in hw_samples.items():
-            #print('shape of zoom feats')
-            #print(zoom_feats.shape)
             for (h, w) in final_indices: 
                 hypercol = zoom_feats[:, h, w]
-                final_label = new_label
-
-
-                #print('this is hypercol shape')
-                #print(hypercol.shape)
-                features.append(hypercol)
-                features_labels.append(final_label)
-
-   
+                features.append(hypercol.detach().clone().numpy())
+                features_labels.append(new_label.detach().clone().numpy())
+        count += 1 
+        print(count)
     return features, features_labels
 
 def main():
@@ -62,8 +56,6 @@ def main():
     dataset_train = PascalVOC(split = 'train')
 
     features, labels = extract_samples(zoomout, dataset_train)
-
-
     np.save("./features/feats_x.npy", features)
     np.save("./features/feats_y.npy", labels)
 
