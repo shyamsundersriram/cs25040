@@ -10,7 +10,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 from torchvision import datasets, transforms
 import torchvision.models as models
-from zoomout import *
+from nets.zoomout import *
 import numpy as np
 from torchvision import transforms
 
@@ -34,7 +34,8 @@ class FCClassifier(nn.Module):
 
     def forward(self, x):
         # normalization
-        x = (x - self.mean)/self.std
+        x = torch.Tensor(x)
+        x = (x - self.mean)/ (self.std + 1e-3)
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
         x = F.relu(self.fc3(x))
@@ -77,7 +78,7 @@ class DenseClassifier(nn.Module):
         """
 
         # normalization
-        x = (x - self.mean)/self.std
+        x = (x - self.mean)/ (self.std + 1e-3)
         x = self.conv1(x)
         x = self.conv1_bn(x)
         x = self.dropout1(x)
