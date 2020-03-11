@@ -91,16 +91,13 @@ class DenseClassifier(nn.Module):
 
         # normalization
         x = (x - self.mean)/ (self.std + 1e-3)
-        x = self.conv1(x)
+        x = F.relu(self.conv1(x))
         x = self.conv1_bn(x)
         x = self.dropout1(x)
-        x = self.conv2(x)
+        x = F.relu(self.conv2(x))
         x = self.conv2_bn(x)
         x = self.dropout2(x)
-        x = self.conv3(x)
+        x = F.relu(self.conv3(x))
         x = self.conv3_bn(x)
-        x = x.view(-1, 1472) 
-        x = F.relu(self.fc1(x))
-        x = F.relu(self.fc2(x))
-        x = F.relu(self.fc3(x))
+        x = F.interpolate(x, (224, 224))
         return x
