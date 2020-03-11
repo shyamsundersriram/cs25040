@@ -25,9 +25,9 @@ class FCClassifier(nn.Module):
         """
         TODO: Implement a fully connected classifier.
         """
-        self.fc1 = nn.Linear(1472, 120)
-        self.fc2 = nn.Linear(120, 64)
-        self.fc3 = nn.Linear(64, 21)
+        self.fc1 = nn.Linear(1472, 256)
+        self.fc2 = nn.Linear(256, 128)
+        self.fc3 = nn.Linear(128, 21)
         # You will need to compute these and store as *.npy files
         self.mean = torch.Tensor(np.load("./features/mean.npy"))
         self.std = torch.Tensor(np.load("./features/std.npy"))
@@ -56,26 +56,26 @@ class DenseClassifier(nn.Module):
         fc_layers = [fc_model.fc1, fc_model.fc2, fc_model.fc3]
         fc1 = fc_layers[0].state_dict()
         conv1 = nn.Conv2d(1472, 256, 1, 1)
-        conv1.load_state_dict({"weight":fc1["weight"].view(256, 1472, 1, 1),"bias":fc["bias"]})
+        conv1.load_state_dict({"weight":fc1["weight"].view(256, 1472, 1, 1),"bias":fc1["bias"]})
         self.conv1 = conv1
-        self.conv1_bn = nn.BatchNorm2d(32)
+        self.conv1_bn = nn.BatchNorm2d(256)
         self.dropout1 = nn.Dropout2d(0.25)
 
-        fc2 = fc_layers[0].state_dict()
+        fc2 = fc_layers[1].state_dict()
         conv2 = nn.Conv2d(256, 128, 1, 1)
-        conv2.load_state_dict({"weight":fc2["weight"].view(128, 256, 1, 1), "bias":fc["bias"]})
+        conv2.load_state_dict({"weight":fc2["weight"].view(128, 256, 1, 1), "bias":fc2["bias"]})
         self.conv2 = conv2 
-        self.conv2_bn = nn.BatchNorm2d(80)
+        self.conv2_bn = nn.BatchNorm2d(128)
 
         fc3 = fc_layers[2].state_dict()
         conv3 = nn.Conv2d(128, 21, 1, 1)
         conv3.load_state_dict({"weight":fc3["weight"].view(21, 128, 1, 1),"bias":fc3["bias"]})
         self.conv3 = conv3
-        self.conv3_bn = nn.BatchNorm2d(64)
+        self.conv3_bn = nn.BatchNorm2d(21)
         self.dropout2 = nn.Dropout2d(0.25)
-        self.fc1 = nn.Linear(1472, 120)
-        self.fc2 = nn.Linear(120, 64)
-        self.fc3 = nn.Linear(64, 21)
+        self.fc1 = nn.Linear(1472, 256)
+        self.fc2 = nn.Linear(256, 128)
+        self.fc3 = nn.Linear(128, 21)
 
         mean = torch.Tensor(np.load("./features/mean.npy"))
         std = torch.Tensor(np.load("./features/std.npy"))
