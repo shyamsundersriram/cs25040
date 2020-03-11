@@ -24,32 +24,34 @@ import pathlib
 
 your_path = str(pathlib.Path(__file__).parent.absolute()) 
 
+
 def train(dataset, model, optimizer, epoch):
     """
     TODO: Implement training for simple FC classifier.
         Input: Z-dimensional vector
         Output: label.
     """
-    batch_size = 100 
-
+    loss_function = nn.CrossEntropyLoss()
+    batch_size = 1000
+    print_every = 100 
     data_x, data_y = dataset
-
+    _, counts_elements = np.unique(data_y, return_counts=True)
+    totals = counts_elements / np.sum(counts_elements)
+    weights = torch.Tensor(totals) # weighing classes 
+    tnsr_x = torch.from_numpy(data_x).type(torch.FloatTensor)
+    tnsr_y = torch.from_numpy(data_y).type(torch.LongTensor)
+    tnsr_data = data.TensorDataset(tnsr_x, tnsr_y)
+    loader = data.DataLoader(tnsr_data, batch_size=batch_size, shuffle=True)
     model.train()
 
-    for t, x in enumerate(data_x):
-        y = data_y[t]
-        if t % batch_size == 0: 
-            optimizer.zero_grad()
-            output = model(x)
-            loss = cross_entropy2d(output, y)
-            print(loss)
-            #loss.backward() 
-            optimizer.step() 
-            #print('Epoch %d, Iteration %d, loss = %.4f' % (epoch, t, loss.item()))
+    for t, (x, y) in enumerate(loader):
+        optimizer.zero_grad()
+        pred = model(x)
+        loss = cross_entropy1d(pred, y, weights)
+        loss.backward()
+        optimizer.step()
 
     torch.save(model, your_path + "/models/fc_cls.pkl")
-
-
 
 
 def main():
