@@ -53,20 +53,32 @@ class DenseClassifier(nn.Module):
         """
         TODO: Convert a fully connected classifier to 1x1 convolutional.
         """
-        self.conv1 = nn.Conv2d(3, 32, 1)
+        fc_layers = [fc_model.fc1, fc_model.fc2, fc_model.fc3]
+        fc1 = fc_layers[0].state_dict()
+        conv1 = nn.Conv2d(1472, 256, 1, 1)
+        conv1.load_state_dict({"weight":fc1["weight"].view(256, 1472, 1, 1),"bias":fc["bias"]})
+        self.conv1 = conv1
         self.conv1_bn = nn.BatchNorm2d(32)
         self.dropout1 = nn.Dropout2d(0.25)
-        self.conv2 = nn.Conv2d(32, 80, 1)
+
+        fc2 = fc_layers[0].state_dict()
+        conv2 = nn.Conv2d(256, 128, 1, 1)
+        conv2.load_state_dict({"weight":fc2["weight"].view(128, 256, 1, 1), "bias":fc["bias"]})
+        self.conv2 = conv2 
         self.conv2_bn = nn.BatchNorm2d(80)
-        self.conv3 = nn.Conv2d(80, 64, 1)
+
+        fc3 = fc_layers[2].state_dict()
+        conv3 = nn.Conv2d(128, 21, 1, 1)
+        conv3.load_state_dict({"weight":fc3["weight"].view(21, 128, 1, 1),"bias":fc3["bias"]})
+        self.conv3 = conv3
         self.conv3_bn = nn.BatchNorm2d(64)
         self.dropout2 = nn.Dropout2d(0.25)
         self.fc1 = nn.Linear(1472, 120)
         self.fc2 = nn.Linear(120, 64)
         self.fc3 = nn.Linear(64, 21)
 
-        self.mean = torch.Tensor(np.load("./features/mean.npy"))
-        self.std = torch.Tensor(np.load("./features/std.npy"))
+        mean = torch.Tensor(np.load("./features/mean.npy"))
+        std = torch.Tensor(np.load("./features/std.npy"))
 
         # You'll need to add these trailing dimensions so that it broadcasts correctly.
         self.mean = torch.Tensor(np.expand_dims(np.expand_dims(mean, -1), -1))
