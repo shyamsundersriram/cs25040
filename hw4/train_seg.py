@@ -28,18 +28,17 @@ your_path = str(pathlib.Path(__file__).parent.absolute())
 def train(args, zoomout, model, train_loader, optimizer, epoch):
     count = 0
 
-    with torch.no_grad():
-        zoom_feats = zoomout.forward(images.cpu().float())
-
-        label = labels
-
+    for t, (x, y) in enumerate(train_loader):
+        with torch.no_grad():
+            zoom_feats = zoomout.forward(x.cpu().float())
+        label = y 
         optimizer.zero_grad()
         predicts = model(zoom_feats)
         weights = torch.Tensor([ 2.4822, 41.2955, 55.9077, 34.6095, 46.5897, 41.7701, 46.5897, 28.3906,
-        27.7405, 24.5541, 56.7812, 44.3171, 30.0331, 53.4412, 44.8642,  8.2217,
-        44.3171, 57.6825, 39.0753, 43.7831, 43.7831]) # computed from train_cls weights. 
+            27.7405, 24.5541, 56.7812, 44.3171, 30.0331, 53.4412, 44.8642,  8.2217,
+            44.3171, 57.6825, 39.0753, 43.7831, 43.7831]) # computed from train_cls weights. 
         loss = cross_entropy2d(predicts, label, weights)
-        loss.backward()
+        loss.backward(retain_graph=True)
         optimizer.step()
         print(loss.item())
 
@@ -116,7 +115,7 @@ def main():
     fc_classifier = torch.load(fc_model_path)
     classifier = DenseClassifier(fc_model=fc_classifier).float()
 
-    """
+    """,
        TODO: Pick an optimizer.
        Reasonable optimizer: Adam with learning rate 1e-4.  Start in range [1e-3, 1e-4].
     """

@@ -37,7 +37,7 @@ def train(dataset, model, optimizer, epoch):
     data_x, data_y = dataset
     _, counts_elements = np.unique(data_y, return_counts=True)
     totals = counts_elements / np.sum(counts_elements)
-    weights = torch.Tensor(totals) # weighing classes 
+    weights = torch.Tensor(1 / totals) # weighing classes to eliminate bias
     tnsr_x = torch.from_numpy(data_x).type(torch.FloatTensor)
     tnsr_y = torch.from_numpy(data_y).type(torch.LongTensor)
     tnsr_data = data.TensorDataset(tnsr_x, tnsr_y)
