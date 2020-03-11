@@ -28,36 +28,39 @@ your_path = str(pathlib.Path(__file__).parent.absolute())
 def train(args, zoomout, model, train_loader, optimizer, epoch):
     count = 0
 
-    model.train()
+    with torch.no_grad():
+        zoom_feats = zoomout.forward(images.cpu().float())
 
-    for batch_idx, (images, labels) in enumerate(train_loader):
+        label = labels
 
         optimizer.zero_grad()
-        output = classifier(x)
-        loss = cross_entropy1d(output, y)
-        loss.backward() 
-        optimizer.step() 
+        predicts = model(zoom_feats)
+        weights = torch.Tensor([ 2.4822, 41.2955, 55.9077, 34.6095, 46.5897, 41.7701, 46.5897, 28.3906,
+        27.7405, 24.5541, 56.7812, 44.3171, 30.0331, 53.4412, 44.8642,  8.2217,
+        44.3171, 57.6825, 39.0753, 43.7831, 43.7831]) # computed from train_cls weights. 
+        loss = cross_entropy2d(predicts, label, weights)
+        loss.backward()
+        optimizer.step()
+        print(loss.item())
 
-        if batch_idx % 20 == 0:
-            count = count + 1
-            print("Epoch [%d/%d] Loss: %.4f" % (epoch+1, args.n_epoch, loss.data[0]))
-
-        if batch_idx % 20 == 0:
-            """
-            Visualization of results.
-            """
-            pred = predicts[0,:,:,:]
-            gt = labels[0,:,:].data.numpy().squeeze()
-            im = images[0,:,:,:].data.numpy().squeeze()
-            im = np.swapaxes(im, 0, 2)
-            im = np.swapaxes(im, 0, 1)
-            _, pred_mx = torch.max(pred, 0)
-            pred = pred_mx.data.numpy().squeeze()
-            image = Image.fromarray(im.astype(np.uint8), mode='RGB')
-
-            image.save("./imgs/im_" + str(count) + "_" + str(epoch) + "_.png")
-            visualize("./lbls/pred_" + str(count) + "_" + str(epoch) + ".png", pred)
-            visualize("./lbls/gt_" + str(count) + "_" + str(epoch) + ".png", gt)
+    if batch_idx % 20 == 0:
+        count = count + 1
+        print("Epoch [%d/%d] Loss: %.4f" % (epoch+1, args.n_epoch, loss.data[0]))
+    if batch_idx % 20 == 0:
+        """
+        Visualization of results.
+        """
+        pred = predicts[0,:,:,:]
+        gt = labels[0,:,:].data.numpy().squeeze()
+        im = images[0,:,:,:].data.numpy().squeeze()
+        im = np.swapaxes(im, 0, 2)
+        im = np.swapaxes(im, 0, 1)
+        _, pred_mx = torch.max(pred, 0)
+        pred = pred_mx.data.numpy().squeeze()
+        image = Image.fromarray(im.astype(np.uint8), mode='RGB')
+        image.save("./imgs/im_" + str(count) + "_" + str(epoch) + "_.png")
+        visualize("./lbls/pred_" + str(count) + "_" + str(epoch) + ".png", pred)
+        visualize("./lbls/gt_" + str(count) + "_" + str(epoch) + ".png", gt)
 
     # Make sure to save your model periodically
     torch.save(model, your_path + "/models/full_model.pkl")
@@ -109,7 +112,7 @@ def main():
         param.requires_grad = False
 
 
-    fc_model_path = your_path + "/full_model.pkl"
+    fc_model_path = your_path + "/models/fc_cls.pkl"
     fc_classifier = torch.load(fc_model_path)
     classifier = DenseClassifier(fc_model=fc_classifier).float()
 
@@ -117,7 +120,6 @@ def main():
        TODO: Pick an optimizer.
        Reasonable optimizer: Adam with learning rate 1e-4.  Start in range [1e-3, 1e-4].
     """
-
     optimizer = optim.Adam(classifier.parameters(), lr=1e-3)
 
     dataset_train = PascalVOC(split = 'train')
