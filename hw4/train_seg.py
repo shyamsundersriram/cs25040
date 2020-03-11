@@ -42,24 +42,24 @@ def train(args, zoomout, model, train_loader, optimizer, epoch):
         optimizer.step()
         print(loss.item())
 
-    if batch_idx % 20 == 0:
-        count = count + 1
-        print("Epoch [%d/%d] Loss: %.4f" % (epoch+1, args.n_epoch, loss.data[0]))
-    if batch_idx % 20 == 0:
-        """
-        Visualization of results.
-        """
-        pred = predicts[0,:,:,:]
-        gt = labels[0,:,:].data.numpy().squeeze()
-        im = images[0,:,:,:].data.numpy().squeeze()
-        im = np.swapaxes(im, 0, 2)
-        im = np.swapaxes(im, 0, 1)
-        _, pred_mx = torch.max(pred, 0)
-        pred = pred_mx.data.numpy().squeeze()
-        image = Image.fromarray(im.astype(np.uint8), mode='RGB')
-        image.save("./imgs/im_" + str(count) + "_" + str(epoch) + "_.png")
-        visualize("./lbls/pred_" + str(count) + "_" + str(epoch) + ".png", pred)
-        visualize("./lbls/gt_" + str(count) + "_" + str(epoch) + ".png", gt)
+        if t % 20 == 0:
+            count = count + 1
+            print("Epoch [%d/%d] Loss: %.4f" % (epoch+1, args.n_epoch, loss.item()))
+    
+            """
+            Visualization of results.
+            """
+            pred = predicts[0,:,:,:]
+            gt = y[0,:,:].data.numpy().squeeze()
+            im = x[0,:,:,:].data.numpy().squeeze()
+            im = np.swapaxes(im, 0, 2)
+            im = np.swapaxes(im, 0, 1)
+            _, pred_mx = torch.max(pred, 0)
+            pred = pred_mx.data.numpy().squeeze()
+            image = Image.fromarray(im.astype(np.uint8), mode='RGB')
+            image.save("./imgs/im_" + str(count) + "_" + str(epoch) + "_.png")
+            visualize("./lbls/pred_" + str(count) + "_" + str(epoch) + ".png", pred)
+            visualize("./lbls/gt_" + str(count) + "_" + str(epoch) + ".png", gt)
 
     # Make sure to save your model periodically
     torch.save(model, your_path + "/models/full_model.pkl")
